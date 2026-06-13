@@ -1,16 +1,24 @@
 {
   "name": "soon-come-villa",
   "version": "1.0.0",
-  "description": "Soon Come Villa booking application",
+  "description": "Soon Come Villa booking application (Next.js)",
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "test": "node --experimental-vm-modules node_modules/.bin/jest"
   },
   "dependencies": {
+    "@dimepay/web-sdk": "^1.0.14",
     "@neondatabase/serverless": "^0.10.4",
     "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2"
+    "flatpickr": "^4.6.13",
+    "jsonwebtoken": "^9.0.2",
+    "next": "^14.2.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "jest": "^29.7.0"

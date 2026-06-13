@@ -1,16 +1,21 @@
-# Soon Come Villa — Booking Application
+# Soon Come Villa — Booking Application (Next.js)
 
-The static Webflow marketing site now has a real booking backend: live availability,
-full payment via DimePay, webhook-confirmed bookings, and an admin dashboard with
-cancellations and tiered refunds. The marketing HTML/CSS is unchanged except for the
-booking forms.
+A hybrid **Next.js (App Router, JavaScript)** app: the Webflow marketing site is
+preserved as static HTML, and the booking + admin flows are React pages backed by
+App Router route handlers — live availability, full payment via DimePay,
+webhook-confirmed bookings, and an admin dashboard with cancellations and tiered refunds.
 
 ## Architecture
 
-- **Static pages** (root `*.html`) — served as-is by Vercel.
-- **Serverless API** (`/api/*.js`, Node, ESM) — Vercel Functions.
+- **Marketing pages** — static Webflow HTML in `/public`
+  (`index, bio, contact-us, house-rules, cancellation-refund-policy, kings`).
+  `next.config.mjs` rewrites map `/` → `/index.html` and legacy `*.html` links → React routes.
+- **Booking + admin pages** (`app/*/page.js`) — React client components reusing the
+  Webflow CSS (`rooms, entire-villa, book-room, ballroom, confirmation, admin`).
+- **API** (`app/api/*/route.js`, Node runtime) — App Router route handlers.
+- **Shared logic** (`lib/*`) — db, availability, refund-policy, dimepay, auth, util.
 - **Neon Postgres** — inventory, bookings, occupancy, payments, blocks.
-- **DimePay** — hosted payment widget (browser SDK via CDN) + REST refunds.
+- **DimePay** — payment widget (npm `@dimepay/web-sdk`, client-side) + REST refunds.
 
 ```
 Guest → availability → create-booking (pending hold) → DimePay widget
@@ -43,9 +48,11 @@ check-in.
    psql "$DATABASE_URL" -f db/schema.sql
    psql "$DATABASE_URL" -f db/seed.sql      # idempotent; edit ballroom flat_day_rate
    ```
-2. **Env** — copy `.env.example` into Vercel (`vercel env add ...`). Generate the
-   admin hash with `node -e "console.log(require('bcryptjs').hashSync('pw',10))"`.
-3. **Install & run** — `npm install`, then `vercel dev` (static pages + `/api`).
+2. **Env** — copy `.env.example`. Generate the admin hash with
+   `node -e "console.log(require('bcryptjs').hashSync('pw',10))"`. In a local `.env`,
+   escape `$` in the hash as `\$` (Next runs dotenv-expand); on Vercel paste it raw.
+3. **Install & run** — `npm install`, then `npm run dev` (Next on :3000).
+   Production: `npm run build && npm start`. Deploy: push to Vercel (auto-detects Next).
 4. **Tests** — `npm test` (refund-policy unit tests).
 
 ## API
