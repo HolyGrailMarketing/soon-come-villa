@@ -21,10 +21,14 @@ export function expandUnits(slug) {
   return null;
 }
 
-// Normalize result rows from either the neon HTTP client (returns an array)
-// or a pooled pg client (returns { rows }).
+// Normalize result rows from either the neon HTTP client or a pooled pg client.
+//   Pooled pg client (used inside tx): exposes .query(text, params) -> { rows }.
+//   Neon HTTP client (used by read endpoints): the sql function itself is
+//   callable as sql(text, params) -> rows[] (it has no .query method in v0.10).
 async function rows(executor, text, params) {
-  const r = await executor.query(text, params);
+  const r = typeof executor.query === 'function'
+    ? await executor.query(text, params)
+    : await executor(text, params);
   return Array.isArray(r) ? r : r.rows;
 }
 
