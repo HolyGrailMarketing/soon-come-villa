@@ -5,8 +5,14 @@
   "framework": null,
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!api/).*)",
       "destination": "/$1"
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/expire-holds",
+      "schedule": "*/10 * * * *"
     }
   ],
   "headers": [
@@ -24,6 +30,15 @@
         {
           "key": "X-XSS-Protection",
           "value": "1; mode=block"
+        }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
         }
       ]
     },

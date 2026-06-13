@@ -25,6 +25,12 @@ Temporary Items
 # Vercel
 .vercel
 
+# Node
+node_modules/
+.env
+.env.local
+.env*.local
+
 # IDE
 .vscode/
 .idea/
