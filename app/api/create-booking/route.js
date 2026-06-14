@@ -8,7 +8,7 @@
 import { NextResponse } from 'next/server';
 import { sql, tx, isConflictError } from '@/lib/db.js';
 import { expandUnits, getConflictingUnits } from '@/lib/availability.js';
-import { signPaymentData, clientId } from '@/lib/dimepay.js';
+import { signPaymentData, clientId, isSandbox } from '@/lib/dimepay.js';
 import { randomToken } from '@/lib/util.js';
 
 export const runtime = 'nodejs';
@@ -102,7 +102,7 @@ export async function POST(request) {
         customer: { name: `${firstName} ${lastName}`, email, phone },
         webhookUrl: `${process.env.PUBLIC_BASE_URL || ''}/api/dimepay-webhook`,
       });
-      return json({ order_id: result.orderId, data, clientId, total: amount, currency: CURRENCY });
+      return json({ order_id: result.orderId, data, clientId, total: amount, currency: CURRENCY, test: isSandbox });
     } catch (err) {
       if (err instanceof Unavailable) {
         return json({ error: 'those dates are no longer available' }, 409);
