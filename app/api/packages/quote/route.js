@@ -3,6 +3,7 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db.js';
 import { computeEstimate } from '@/lib/packages.js';
+import { sendEmail } from '@/lib/email.js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,9 +11,39 @@ export const dynamic = 'force-dynamic';
 const noStore = { headers: { 'Cache-Control': 'no-store' } };
 const json = (body, status = 200) => NextResponse.json(body, { status, ...noStore });
 const YMD = /^\d{4}-\d{2}-\d{2}$/;
+const jmd = (n) => 'J$' + Math.round(Number(n) || 0).toLocaleString();
 
 function makeRef() {
   return 'SCV-' + crypto.randomUUID().replace(/-/g, '').slice(0, 6).toUpperCase();
+}
+
+// Fire-and-forget notification emails (best-effort; never block/fail the quote).
+async function notify({ ref, pkgSlug, tier, g, eventDate, est, contact, specialRequests }) {
+  const rows = est.addonLines.map((l) => `<tr><td>${l.name}${l.qty > 1 ? ` ×${l.qty}` : ''}</td><td align="right">${jmd(l.line)}</td></tr>`).join('');
+  const summary = `
+    <h2>Wedding quote request — ${ref}</h2>
+    <p><strong>${contact.firstName} ${contact.lastName}</strong> · ${contact.email}${contact.phone ? ` · ${contact.phone}` : ''}</p>
+    <p>Package: <strong>${pkgSlug}</strong> · Tier: ${tier.label} · Guests: ${g} · Date: ${eventDate || '—'}</p>
+    <table cellpadding="6" style="border-collapse:collapse;width:100%;max-width:480px">
+      <tr><td>Venue</td><td align="right">${jmd(est.venue)}</td></tr>
+      <tr><td>Coordination (35%)</td><td align="right">${jmd(est.coordination)}</td></tr>
+      <tr><td>Refundable incidental (20%)</td><td align="right">${jmd(est.incidental)}</td></tr>
+      ${rows}
+      <tr><td><strong>Estimated total</strong></td><td align="right"><strong>${jmd(est.estimateTotal)}</strong></td></tr>
+    </table>
+    <p>+ Catering quoted separately: ${jmd(tier.catering_low)} – ${jmd(tier.catering_high)}</p>
+    ${specialRequests ? `<p><em>Special requests:</em> ${specialRequests}</p>` : ''}`;
+
+  const adminTo = process.env.NOTIFY_EMAIL || process.env.ADMIN_EMAIL;
+  const tasks = [];
+  if (adminTo) tasks.push(sendEmail({ to: adminTo, replyTo: contact.email, subject: `New wedding quote ${ref} — ${contact.firstName} ${contact.lastName}`, html: summary }));
+  // Guest confirmation (needs a verified sending domain on Resend to reach arbitrary inboxes).
+  tasks.push(sendEmail({
+    to: contact.email,
+    subject: `We received your wedding quote request (${ref}) — Soon Come Villa`,
+    html: `<p>Hi ${contact.firstName},</p><p>Thank you for your interest in a wedding at Soon Come Villa. We’ve received your request (<strong>${ref}</strong>) and our team will reach out shortly with a detailed quote.</p>${summary}<p>A 50% deposit secures your date; the balance is due one month before the event.</p>`,
+  }));
+  await Promise.allSettled(tasks);
 }
 
 export async function POST(request) {
@@ -68,6 +99,14 @@ export async function POST(request) {
         (${ref}, ${pkgSlug}, ${tier.label}, ${g}, ${eventDate || null}, 'JMD', ${est.venue},
          ${est.coordination}, ${est.incidental}, ${JSON.stringify(est.addonLines)}::jsonb, ${est.addonsTotal}, ${est.estimateTotal},
          ${tier.catering_low}, ${tier.catering_high}, ${firstName}, ${lastName}, ${email}, ${phone || null}, ${specialRequests || null})`;
+
+    // Best-effort notification emails — never block or fail the request on email errors.
+    try {
+      await notify({
+        ref, pkgSlug, tier, g, eventDate, est,
+        contact: { firstName, lastName, email, phone }, specialRequests,
+      });
+    } catch (e) { console.error('quote notify failed', e.message); }
 
     return json({ ref, estimateTotal: est.estimateTotal, currency: 'JMD' });
   } catch (err) {
