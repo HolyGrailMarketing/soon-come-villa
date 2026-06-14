@@ -4,6 +4,7 @@ import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db.js';
 import { computeEstimate } from '@/lib/packages.js';
 import { sendEmail } from '@/lib/email.js';
+import { brandedEmail } from '@/lib/email-template.js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -19,29 +20,47 @@ function makeRef() {
 
 // Fire-and-forget notification emails (best-effort; never block/fail the quote).
 async function notify({ ref, pkgSlug, tier, g, eventDate, est, contact, specialRequests }) {
-  const rows = est.addonLines.map((l) => `<tr><td>${l.name}${l.qty > 1 ? ` ×${l.qty}` : ''}</td><td align="right">${jmd(l.line)}</td></tr>`).join('');
-  const summary = `
-    <h2>Wedding quote request — ${ref}</h2>
-    <p><strong>${contact.firstName} ${contact.lastName}</strong> · ${contact.email}${contact.phone ? ` · ${contact.phone}` : ''}</p>
-    <p>Package: <strong>${pkgSlug}</strong> · Tier: ${tier.label} · Guests: ${g} · Date: ${eventDate || '—'}</p>
-    <table cellpadding="6" style="border-collapse:collapse;width:100%;max-width:480px">
-      <tr><td>Venue</td><td align="right">${jmd(est.venue)}</td></tr>
-      <tr><td>Coordination (35%)</td><td align="right">${jmd(est.coordination)}</td></tr>
-      <tr><td>Refundable incidental (20%)</td><td align="right">${jmd(est.incidental)}</td></tr>
-      ${rows}
-      <tr><td><strong>Estimated total</strong></td><td align="right"><strong>${jmd(est.estimateTotal)}</strong></td></tr>
-    </table>
-    <p>+ Catering quoted separately: ${jmd(tier.catering_low)} – ${jmd(tier.catering_high)}</p>
-    ${specialRequests ? `<p><em>Special requests:</em> ${specialRequests}</p>` : ''}`;
-
+  const pkgName = pkgSlug.charAt(0).toUpperCase() + pkgSlug.slice(1);
+  const detailRows = [
+    ['Package', pkgName],
+    ['Guest tier', `${tier.label} (${g} guests)`],
+    ['Event date', eventDate || 'To be confirmed'],
+    ['Venue', jmd(est.venue)],
+    ['Coordination (35%)', jmd(est.coordination)],
+    ['Refundable incidental (20%)', jmd(est.incidental)],
+    ...est.addonLines.map((l) => [`${l.name}${l.qty > 1 ? ` ×${l.qty}` : ''}`, jmd(l.line)]),
+    ['Estimated total', jmd(est.estimateTotal)],
+    ['Catering (quoted separately)', `${jmd(tier.catering_low)} – ${jmd(tier.catering_high)}`],
+  ];
+  const base = process.env.PUBLIC_BASE_URL || 'https://sooncomevilla.com';
   const adminTo = process.env.NOTIFY_EMAIL || process.env.ADMIN_EMAIL;
   const tasks = [];
-  if (adminTo) tasks.push(sendEmail({ to: adminTo, replyTo: contact.email, subject: `New wedding quote ${ref} — ${contact.firstName} ${contact.lastName}`, html: summary }));
-  // Guest confirmation (needs a verified sending domain on Resend to reach arbitrary inboxes).
+
+  if (adminTo) {
+    tasks.push(sendEmail({
+      to: adminTo, replyTo: contact.email,
+      subject: `New wedding quote ${ref} — ${contact.firstName} ${contact.lastName}`,
+      html: brandedEmail({
+        preheader: `${pkgName} · ${jmd(est.estimateTotal)} estimate`,
+        heading: 'New wedding quote request',
+        intro: `<strong>${contact.firstName} ${contact.lastName}</strong> requested a quote.<br>${contact.email}${contact.phone ? ` &middot; ${contact.phone}` : ''} &middot; Ref ${ref}`,
+        detailRows,
+        note: specialRequests ? `<strong>Special requests:</strong> ${specialRequests}` : undefined,
+        cta: { text: 'Open admin dashboard', url: `${base}/admin` },
+      }),
+    }));
+  }
   tasks.push(sendEmail({
     to: contact.email,
     subject: `We received your wedding quote request (${ref}) — Soon Come Villa`,
-    html: `<p>Hi ${contact.firstName},</p><p>Thank you for your interest in a wedding at Soon Come Villa. We’ve received your request (<strong>${ref}</strong>) and our team will reach out shortly with a detailed quote.</p>${summary}<p>A 50% deposit secures your date; the balance is due one month before the event.</p>`,
+    html: brandedEmail({
+      preheader: 'Thank you — our team will be in touch shortly.',
+      heading: `Thank you, ${contact.firstName}!`,
+      intro: `We’ve received your request for a <strong>${pkgName}</strong> wedding (reference <strong>${ref}</strong>). Our team will reach out shortly with a detailed quote.`,
+      detailRows,
+      note: 'This is an estimate, not a charge. A 50% deposit secures your date; the balance is due one month before the event.',
+      cta: { text: 'Explore packages', url: `${base}/packages` },
+    }),
   }));
   await Promise.allSettled(tasks);
 }

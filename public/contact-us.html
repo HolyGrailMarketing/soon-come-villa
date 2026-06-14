@@ -170,5 +170,38 @@
   </section>
   <script src="https://d3e54v103j8qbb.cloudfront.net/js/jquery-3.5.1.min.dc5e7f18c8.js?site=67f3440249bf291aad85540e" type="text/javascript" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
   <script src="js/webflow.js" type="text/javascript"></script>
+  <script type="text/javascript">
+  // Route the contact form through our Resend-backed API (overrides Webflow's submit).
+  (function () {
+    var form = document.getElementById('wf-form-Contact-form');
+    if (!form) return;
+    form.setAttribute('action', '');
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      var wrap = form.closest('.w-form') || form.parentNode;
+      var done = wrap.querySelector('.w-form-done');
+      var fail = wrap.querySelector('.w-form-fail');
+      var btn = form.querySelector('input[type=submit]');
+      var orig = btn ? btn.value : '';
+      if (btn) { btn.value = btn.getAttribute('data-wait') || 'Please wait...'; btn.disabled = true; }
+      var val = function (n) { var el = form.querySelector('[name="' + n + '"]'); return el ? el.value : ''; };
+      fetch('/api/contact', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'Contact', firstName: val('first-name'), lastName: val('last-name'),
+          email: val('email-address'), phone: val('phone-number'), message: val('message'),
+        }),
+      })
+        .then(function (r) { if (!r.ok) throw new Error('fail'); return r.json(); })
+        .then(function () { form.style.display = 'none'; if (done) done.style.display = 'block'; })
+        .catch(function () {
+          if (btn) { btn.value = orig; btn.disabled = false; }
+          if (fail) fail.style.display = 'block';
+          else alert('Something went wrong. Please call (876) 235-5881 or email reservations@sooncomevilla.com.');
+        });
+    }, true);
+  })();
+  </script>
 </body>
 </html>

@@ -6,6 +6,55 @@
 import { NextResponse } from 'next/server';
 import { sql, tx } from '@/lib/db.js';
 import { verifyWebhook } from '@/lib/dimepay.js';
+import { sendEmail } from '@/lib/email.js';
+import { brandedEmail } from '@/lib/email-template.js';
+
+const ymd = (d) => (d ? String(d).slice(0, 10) : '');
+const UNIT_NAMES = { 'entire-villa': 'Entire Villa', ballroom: 'Ballroom', 'room-1': 'Single Room 1', 'room-2': 'Single Room 2', 'room-3': 'Single Room 3', 'room-4': 'Single Room 4' };
+
+// Best-effort booking emails (guest confirmation + owner notification).
+async function notifyBooking(b) {
+  const unit = UNIT_NAMES[b.unit_slug] || b.unit_slug;
+  const money = `${b.currency} $${Number(b.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
+  const isEvent = b.kind === 'ballroom';
+  const detailRows = [
+    ['Confirmation #', String(b.dimepay_order_id).slice(0, 12).toUpperCase()],
+    ['Booking', unit],
+    isEvent ? ['Event date', ymd(b.check_in)] : ['Check-in', ymd(b.check_in)],
+    ...(isEvent ? [] : [['Check-out', ymd(b.check_out)]]),
+    ['Guests', String(b.guests)],
+    ['Total paid', money],
+  ];
+  const base = process.env.PUBLIC_BASE_URL || 'https://sooncomevilla.com';
+  const adminTo = process.env.NOTIFY_EMAIL || process.env.ADMIN_EMAIL;
+  const tasks = [];
+  tasks.push(sendEmail({
+    to: b.email,
+    subject: `Booking confirmed — ${unit} · Soon Come Villa`,
+    html: brandedEmail({
+      preheader: `Your ${unit} booking is confirmed.`,
+      heading: 'Your booking is confirmed 🎉',
+      intro: `Thank you, ${b.first_name}! Your payment was received and your reservation at Soon Come Villa is confirmed.`,
+      detailRows,
+      note: 'We look forward to hosting you. Reply to this email for any changes or special requests.',
+      cta: { text: 'Visit our website', url: base },
+    }),
+  }));
+  if (adminTo) {
+    tasks.push(sendEmail({
+      to: adminTo, replyTo: b.email,
+      subject: `New paid booking — ${unit} · ${b.first_name} ${b.last_name}`,
+      html: brandedEmail({
+        preheader: `${money} · ${unit}`,
+        heading: 'New paid booking',
+        intro: `<strong>${b.first_name} ${b.last_name}</strong> (${b.email}${b.phone ? ` &middot; ${b.phone}` : ''}) just paid for a booking.`,
+        detailRows,
+        cta: { text: 'Open admin dashboard', url: `${base}/admin` },
+      }),
+    }));
+  }
+  await Promise.allSettled(tasks);
+}
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -105,6 +154,8 @@ export async function POST(request) {
         [booking.id, evt.txnId || null, booking.amount, booking.currency, JSON.stringify(event)]
       );
     });
+
+    try { await notifyBooking(booking); } catch (e) { console.error('booking notify failed', e.message); }
 
     return json({ ok: true, status: 'paid' });
   } catch (err) {
