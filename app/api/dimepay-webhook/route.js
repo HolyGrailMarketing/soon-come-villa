@@ -14,11 +14,13 @@ const json = (body, status = 200) => NextResponse.json(body, { status, ...noStor
 const PAID_STATES = new Set(['success', 'successful', 'paid', 'completed', 'approved']);
 
 // Pull fields from a few plausible shapes (DimePay webhook schema is thin).
+// We send the order reference as `id` in the signed data, so DimePay echoes it
+// back as the order reference; the transaction id comes on a transaction_* field.
 function extract(body) {
   const d = body?.data && typeof body.data === 'object' ? body.data : body;
   return {
-    orderId: d.order_id || d.orderId || body.order_id,
-    txnId: d.transaction_id || d.txn_id || d.transactionId || d.id,
+    orderId: d.order_id || d.orderId || d.reference || d.id || body.order_id || body.id,
+    txnId: d.transaction_id || d.txn_id || d.transactionId || d.payment_id,
     status: String(d.status || body.status || '').toLowerCase(),
     amount: d.amount != null ? Number(d.amount) : undefined,
     currency: d.currency || body.currency,
