@@ -55,10 +55,21 @@ check-in.
    Production: `npm run build && npm start`. Deploy: push to Vercel (auto-detects Next).
 4. **Tests** — `npm test` (refund-policy unit tests).
 
+## Wedding packages (quote requests — no online payment)
+
+`/packages` lets guests pick a wedding package (Hummingbird / Flamingo / Peacock), customize it
+(date, guest tier, priced add-ons), see a live **JMD** estimate (venue + 35% coordination + 20%
+refundable incidental + add-ons; catering shown as an indicative range), and submit a **quote request**.
+No DimePay — requests land in the admin dashboard (Wedding quotes tab) for offline follow-up + deposit.
+Schema/seed: `db/packages.sql`, `db/packages_seed.sql` (tables `packages`, `package_tiers`,
+`package_addons`, `quote_requests`). Estimate logic: `lib/packages.js` (server recomputes on submit).
+Add-ons seed inactive at price 0 — set JMD prices + activate them in Admin → Package pricing.
+
 ## API
 
 Public: `GET /api/units`, `GET /api/availability`, `POST /api/create-booking`,
-`POST /api/dimepay-webhook`, `GET /api/booking/:order_id`.
+`POST /api/dimepay-webhook`, `GET /api/booking/:order_id`, `GET /api/packages`, `POST /api/packages/quote`.
+Admin (cookie): `…/quotes` (GET/PATCH), `…/packages` (GET), `…/package-rate` (POST).
 
 Admin (HttpOnly session cookie): `POST /api/admin/login` · `logout`,
 `GET /api/admin/bookings`, `POST /api/admin/cancel`, `GET|POST /api/admin/refund`

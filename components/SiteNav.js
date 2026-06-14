@@ -14,6 +14,7 @@ export default function SiteNav() {
             <div className="nav-menu-three">
               <ul role="list" className="nav-menu-block w-list-unstyled">
                 <li><a href="/index.html" className="nav-link">Home</a></li>
+                <li><a href="/packages" className="nav-link">Weddings</a></li>
                 <li><a href="/ballroom" className="nav-link">Events</a></li>
                 <li><a href="/contact-us.html" className="nav-link">Contact</a></li>
               </ul>
