@@ -55,13 +55,6 @@ export default function RoomsPage() {
     <>
       <SiteNav />
       <main className="rooms-main">
-        <header className="rooms-hero">
-          <h1 className="heading rooms-title">Choose Your Stay</h1>
-          <p className="paragraph rooms-sub">
-            Book the whole villa, a single room, or our event ballroom — reserve instantly and pay securely online.
-          </p>
-        </header>
-
         <div className="room-grid">
           {OPTIONS.map((o) => (
             <article key={o.slug} className="room-card">
@@ -90,12 +83,9 @@ export default function RoomsPage() {
       </main>
 
       <style jsx>{`
-        .rooms-main { padding: 8px 16px 64px; }
-        .rooms-hero { text-align: center; max-width: 720px; margin: 0 auto; padding: 32px 8px 8px; }
-        .rooms-title { margin-bottom: 8px; }
-        .rooms-sub { color: #555; }
+        .rooms-main { padding: 40px 16px 64px; }
         .room-grid {
-          display: grid; gap: 28px; max-width: 1080px; margin: 32px auto 0;
+          display: grid; gap: 28px; max-width: 1080px; margin: 0 auto;
           grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         }
         .room-card {
