@@ -121,6 +121,24 @@ export async function POST(request) {
 async function reserve(client, p) {
   const { exp, unitRow, checkIn, checkOut } = p;
 
+  // Self-heal: free occupancy held by expired pending holds (abandoned
+  // checkouts) so their dates reopen immediately. The availability read already
+  // ignores expired holds, but the occupancy EXCLUDE constraint would otherwise
+  // block the insert until the (daily, on Hobby) cron sweep runs.
+  await client.query(
+    `DELETE FROM occupancy o USING bookings b
+      WHERE o.booking_id = b.id
+        AND b.status = 'pending'
+        AND b.hold_expires_at IS NOT NULL
+        AND b.hold_expires_at <= now()`
+  );
+  await client.query(
+    `UPDATE bookings SET status = 'expired', updated_at = now()
+      WHERE status = 'pending'
+        AND hold_expires_at IS NOT NULL
+        AND hold_expires_at <= now()`
+  );
+
   // Re-check availability inside the transaction.
   const conflicts = await getConflictingUnits(client, exp.units, checkIn, checkOut);
   const free = exp.units.filter((u) => !conflicts.has(u));
