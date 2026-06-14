@@ -1,9 +1,11 @@
 // POST /api/dimepay-webhook — the SOURCE OF TRUTH for payment confirmation.
-// Idempotent: re-posting the same event is a no-op. A booking is NEVER marked
-// paid from the client onSuccess callback — only from a verified webhook here.
+// DimePay POSTs { payload: <JWT> } signed with the merchant secret key, so
+// verifying the JWT both decodes the event AND authenticates it. Idempotent:
+// re-posting the same event is a no-op. A booking is NEVER marked paid from the
+// client onSuccess callback — only from a verified webhook here.
 import { NextResponse } from 'next/server';
 import { sql, tx } from '@/lib/db.js';
-import { fetchPayment } from '@/lib/dimepay.js';
+import { verifyWebhook } from '@/lib/dimepay.js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -11,27 +13,56 @@ export const dynamic = 'force-dynamic';
 const noStore = { headers: { 'Cache-Control': 'no-store' } };
 const json = (body, status = 200) => NextResponse.json(body, { status, ...noStore });
 
-const PAID_STATES = new Set(['success', 'successful', 'paid', 'completed', 'approved']);
+// "Paid" is signalled by the top-level status SUCCESS and/or the transaction
+// status COMPLETE.
+const PAID_STATES = new Set(['success', 'successful', 'complete', 'completed', 'paid', 'approved']);
 
-// Pull fields from a few plausible shapes (DimePay webhook schema is thin).
-// We send the order reference as `id` in the signed data, so DimePay echoes it
-// back as the order reference; the transaction id comes on a transaction_* field.
-function extract(body) {
-  const d = body?.data && typeof body.data === 'object' ? body.data : body;
+// Map DimePay's verified event to the fields we need. Falls back to a flat shape
+// for local manual tests (curl with plain JSON).
+function extract(event) {
+  const txn = event?.details?.transaction;
+  if (txn) {
+    return {
+      orderId: txn.order?.metadata?.order_id || txn.order?.origin_id,
+      txnId: txn.id,
+      status: String(txn.status || event.status || '').toLowerCase(),
+      amount: txn.amount != null ? Number(txn.amount) : undefined,
+      currency: txn.currency,
+    };
+  }
+  const d = event?.data && typeof event.data === 'object' ? event.data : (event || {});
   return {
-    orderId: d.order_id || d.orderId || d.reference || d.id || body.order_id || body.id,
+    orderId: d.order_id || d.orderId || d.reference || d.id,
     txnId: d.transaction_id || d.txn_id || d.transactionId || d.payment_id,
-    status: String(d.status || body.status || '').toLowerCase(),
+    status: String(d.status || '').toLowerCase(),
     amount: d.amount != null ? Number(d.amount) : undefined,
-    currency: d.currency || body.currency,
+    currency: d.currency,
   };
 }
 
 export async function POST(request) {
-  let body;
-  try { body = await request.json(); } catch { return json({ error: 'invalid body' }, 400); }
-  const evt = extract(body);
-  if (!evt.orderId) return json({ error: 'missing order_id' }, 400);
+  let raw;
+  try { raw = await request.json(); } catch { return json({ error: 'invalid body' }, 400); }
+
+  // Verify the signed payload (authenticates the webhook). Fall back to a plain
+  // body only for local manual testing.
+  let event;
+  if (raw && typeof raw.payload === 'string') {
+    try {
+      event = verifyWebhook(raw.payload);
+    } catch (e) {
+      console.warn('webhook signature verification failed', e.message);
+      return json({ error: 'invalid signature' }, 401);
+    }
+  } else {
+    event = raw;
+  }
+
+  const evt = extract(event);
+  if (!evt.orderId) {
+    console.warn('webhook: no order reference in event');
+    return json({ ignored: 'no order reference' });
+  }
 
   try {
     const rows = await sql`SELECT * FROM bookings WHERE dimepay_order_id = ${evt.orderId}`;
@@ -46,30 +77,14 @@ export async function POST(request) {
       return json({ ok: true, status: booking.status });
     }
 
-    // Defense-in-depth: prefer re-reading the payment from DimePay REST over
-    // trusting the webhook body. Fall back to the body if REST is unavailable.
-    let status = evt.status;
-    let amount = evt.amount;
-    const txnId = evt.txnId;
-    if (txnId) {
-      try {
-        const remote = await fetchPayment(txnId);
-        const r = extract(remote);
-        if (r.status) status = r.status;
-        if (r.amount != null) amount = r.amount;
-      } catch (e) {
-        console.warn('payment re-fetch failed; using webhook body', e.message);
-      }
-    }
-
-    if (!PAID_STATES.has(status)) {
-      return json({ ok: true, status });
+    if (!PAID_STATES.has(evt.status)) {
+      return json({ ok: true, status: evt.status });
     }
 
     // Verify the amount matches what we charged. Mismatch = do NOT mark paid.
-    if (amount != null && Math.abs(amount - Number(booking.amount)) > 0.01) {
+    if (evt.amount != null && Math.abs(evt.amount - Number(booking.amount)) > 0.01) {
       console.error('webhook amount mismatch', {
-        order: evt.orderId, expected: booking.amount, got: amount,
+        order: evt.orderId, expected: booking.amount, got: evt.amount,
       });
       return json({ ignored: 'amount mismatch' });
     }
@@ -80,14 +95,14 @@ export async function POST(request) {
             SET status = 'paid', dimepay_txn_id = $2, hold_expires_at = NULL,
                 updated_at = now()
           WHERE id = $1 AND status = 'pending'`,
-        [booking.id, txnId || null]
+        [booking.id, evt.txnId || null]
       );
       // Idempotent insert (partial unique index on (booking_id, txn) for charges).
       await client.query(
         `INSERT INTO payments (booking_id, dimepay_txn_id, amount, currency, type, status, raw_webhook)
          VALUES ($1,$2,$3,$4,'charge','paid',$5)
          ON CONFLICT (booking_id, dimepay_txn_id) WHERE type = 'charge' DO NOTHING`,
-        [booking.id, txnId || null, booking.amount, booking.currency, JSON.stringify(body)]
+        [booking.id, evt.txnId || null, booking.amount, booking.currency, JSON.stringify(event)]
       );
     });
 

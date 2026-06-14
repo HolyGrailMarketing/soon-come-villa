@@ -10,11 +10,18 @@ export default function AdminPage() {
   const [note, setNote] = useState('');
 
   const load = useCallback(async () => {
-    const res = await fetch('/api/admin/bookings');
-    if (res.status === 401) { setAuthed(false); return; }
-    const { bookings } = await res.json();
-    setBookings(bookings || []);
-    setAuthed(true);
+    try {
+      const res = await fetch('/api/admin/bookings');
+      if (res.status === 401) { setAuthed(false); return; }
+      if (!res.ok) { setNote('Could not load bookings — retry.'); setAuthed(true); return; }
+      const { bookings } = await res.json();
+      setBookings(bookings || []);
+      setAuthed(true);
+    } catch {
+      // Transient network error (e.g. ERR_NETWORK_CHANGED) — don't crash the page.
+      setNote('Network error loading bookings — click Refresh to retry.');
+      setAuthed((a) => (a === null ? false : a));
+    }
   }, []);
 
   useEffect(() => { load(); }, [load]);
