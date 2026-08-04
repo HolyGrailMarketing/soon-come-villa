@@ -13,6 +13,7 @@
   "dependencies": {
     "@dimepay/web-sdk": "^1.0.14",
     "@neondatabase/serverless": "^0.10.4",
+    "@vercel/analytics": "^2.0.1",
     "bcryptjs": "^2.4.3",
     "flatpickr": "^4.6.13",
     "jsonwebtoken": "^9.0.2",
