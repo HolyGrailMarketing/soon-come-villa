@@ -20,6 +20,11 @@ export default function RootLayout({ children }) {
           href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css"
         />
         <link rel="icon" type="image/png" href="/images/favicon.png" />
+        {/* Load the Web Analytics collector explicitly. <Analytics /> below
+            enqueues pageviews into window.vaq (including SPA route changes) but
+            was not injecting this loader on the deployed React routes, so the
+            queue never drained. Same tag the static pages in /public use. */}
+        <script defer src="/_vercel/insights/script.js" />
       </head>
       <body>
         {children}
