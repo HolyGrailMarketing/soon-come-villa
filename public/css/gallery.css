@@ -1,0 +1,86 @@
+/* Gallery rail — Soon Come Villa.
+ *
+ * This was a timed Webflow IX2 transform: seven cards sliding past a fixed
+ * window at ~37px/s, forever. Every card was a moving target, the last one took
+ * about a minute to arrive, and nothing could stop it (WCAG 2.2.2 Pause, Stop,
+ * Hide). It is now a genuine scroll rail — swipe, trackpad, scrollbar and arrow
+ * keys all reach any card immediately — and the drift survives only as an
+ * ambient invitation that yields the moment anyone engages with it.
+ *
+ * gallery.js drives the drift by scrollLeft, so the ambient motion and the
+ * user's own scrolling share one mechanism and can never fight each other.
+ */
+
+.gallery-marquee-wrap {
+  /* Full-bleed out of the 1224px container so the cards still run edge to edge. */
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 55, .55) transparent;
+}
+
+/* IX2 keeps writing an inline transform; a stylesheet !important still wins, so
+   the rail is positioned by scroll alone. */
+.gallery-marquee-list {
+  transform: none !important;
+  padding-inline: max(30px, calc(50vw - 612px));
+}
+
+.gallery-marquee-wrap::-webkit-scrollbar { height: 8px; }
+.gallery-marquee-wrap::-webkit-scrollbar-track { background: transparent; }
+.gallery-marquee-wrap::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, .55);
+  border-radius: 99px;
+}
+.gallery-marquee-wrap::-webkit-scrollbar-thumb:hover { background: rgba(212, 175, 55, .85); }
+
+/* ---- the control ------------------------------------------------------- */
+
+.scv-rail-bar {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  margin-top: 18px;
+}
+
+.scv-rail-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 13px 19px 13px 15px;   /* keeps the hit area at/above 44px */
+  min-height: 44px;
+  border: 1px solid rgba(26, 27, 31, .18);
+  border-radius: 999px;
+  background: transparent;
+  color: #1a1b1f;
+  cursor: pointer;
+  font-family: Montserrat, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .17em;
+  text-transform: uppercase;
+  transition: border-color .2s ease, background .2s ease;
+}
+.scv-rail-toggle:hover {
+  border-color: rgba(26, 27, 31, .45);
+  background: rgba(26, 27, 31, .04);
+}
+
+/* Two bars / one triangle, swapped by the button's state. */
+.scv-rail-toggle .scv-rail-icon {
+  width: 9px;
+  height: 11px;
+  background: #1a1b1f;
+  clip-path: polygon(0 0, 32% 0, 32% 100%, 0 100%, 0 0, 68% 0, 100% 0, 100% 100%, 68% 100%);
+}
+.scv-rail-toggle[aria-pressed="true"] .scv-rail-icon {
+  clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Nothing moves on its own, so a pause control would be a lie. */
+  .scv-rail-bar { display: none; }
+}
