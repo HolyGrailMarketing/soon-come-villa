@@ -1,6 +1,8 @@
 // Root layout for the React (booking + admin) pages. Loads the same Webflow
 // stylesheets the static marketing HTML uses (served from /public/css) so the
 // React pages look identical, plus Flatpickr's stylesheet for the date pickers.
+import { Analytics } from '@vercel/analytics/next';
+
 export const metadata = {
   title: 'Soon Come Villa',
   description: 'Luxury villa rental in Runaway Bay, Jamaica — book your stay.',
@@ -19,7 +21,10 @@ export default function RootLayout({ children }) {
         />
         <link rel="icon" type="image/png" href="/images/favicon.png" />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }
