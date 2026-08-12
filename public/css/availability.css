@@ -1,0 +1,261 @@
+/* Hero availability check — Soon Come Villa.
+   At rest this is a single hairline band so the cinematic hero stays clean;
+   the glass panel and the large serif answer only appear once the villa has
+   something to say. Below 480px the marketing hero is display:none, so
+   availability.js re-parents this module under the navbar and it switches to
+   the solid `--docked` treatment. */
+
+.scv-av {
+  --scv-ink: #1a1b1f;
+  --scv-gold: #d4af37;
+  --scv-cream: #faf8f2;
+  --scv-rule: rgba(212, 175, 55, .38);
+  --scv-hair: rgba(250, 248, 242, .14);
+
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 0 20px;
+  font-family: Montserrat, sans-serif;
+  text-align: left;
+}
+.scv-av *,
+.scv-av *:before,
+.scv-av *:after { box-sizing: border-box; }
+
+/* ---- placement ---------------------------------------------------------- */
+
+/* The wordmark is vertically centred and grows taller as the viewport narrows,
+   so anchoring the band at a fixed offset makes the two collide at mid widths.
+   Stack them instead and let the pair centre as a group. `.div-block-59` (the
+   scroll cue) is absolutely pinned to the hero's bottom and stays out of flow;
+   the padding below keeps the group clear of it. */
+.hero-fixed-wrap.scv-hero-stack {
+  flex-direction: column;
+  /* The wordmark's line-height (199px) is shorter than its font-size (231px),
+     so its swashes spill well below the h1's box. The gap clears that ink, not
+     just the layout box. */
+  gap: clamp(52px, 7vh, 86px);
+  padding-bottom: 28px;
+}
+
+/* The band is the hero's call to action now. The lottie scroll cue pinned to the
+   bottom competes for the same attention and collides with the band at short
+   viewports, so it goes. Delete this rule to bring it back. */
+.hero-fixed-wrap.scv-hero-stack .div-block-59 { display: none; }
+
+#scv-av-hero-mount {
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  pointer-events: none;          /* keep the rest of the hero untouched */
+}
+#scv-av-hero-mount .scv-av { pointer-events: auto; }
+
+#scv-av-mobile-mount:empty { display: none; }
+
+/* ---- the band ----------------------------------------------------------- */
+
+.scv-av__form {
+  display: grid;
+  grid-template-columns: 1fr 1fr .68fr auto;
+  align-items: stretch;
+  border-top: 1px solid var(--scv-rule);
+  border-bottom: 1px solid var(--scv-rule);
+  background: rgba(26, 27, 31, .42);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+.scv-av__field {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 7px;
+  min-width: 0;
+  padding: 13px 18px;
+  border-right: 1px solid var(--scv-hair);
+}
+
+.scv-av__field label {
+  color: rgba(250, 248, 242, .66);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+}
+
+.scv-av__field input {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  -webkit-appearance: none;
+  appearance: none;
+  color: var(--scv-cream);
+  font-family: Montserrat, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  line-height: 1.2;
+}
+.scv-av__field input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: .55;
+  cursor: pointer;
+}
+.scv-av__field input::-webkit-calendar-picker-indicator:hover { opacity: .9; }
+
+.scv-av__go {
+  align-self: stretch;
+  padding: 16px 28px;
+  border: 0;
+  background: var(--scv-gold);
+  color: var(--scv-ink);
+  cursor: pointer;
+  font-family: Montserrat, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: background .2s ease;
+}
+.scv-av__go:hover { background: #e6c34d; }
+.scv-av__go[disabled] { opacity: .6; cursor: default; }
+
+/* ---- the answer --------------------------------------------------------- */
+
+.scv-av__answer { display: none; }
+.scv-av[data-state="checking"] .scv-av__answer,
+.scv-av[data-state="answered"] .scv-av__answer,
+.scv-av[data-state="notice"] .scv-av__answer { display: block; }
+
+.scv-av__panel {
+  padding: 20px 22px 22px;
+  border: 1px solid var(--scv-rule);
+  border-top: 0;
+  background: rgba(26, 27, 31, .84);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  animation: scv-av-rise .32s ease both;
+}
+
+@keyframes scv-av-rise {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* The answer outranks the form: it is the largest type on the screen. */
+.scv-av__headline {
+  margin: 0 0 7px;
+  color: var(--scv-cream);
+  font-family: 'Libre Baskerville', Georgia, serif;
+  font-size: clamp(19px, 2.5vw, 27px);
+  font-weight: 400;
+  line-height: 1.24;
+}
+
+.scv-av__meta {
+  margin: 0;
+  color: rgba(250, 248, 242, .72);
+  font-size: 13px;
+  letter-spacing: .01em;
+  line-height: 1.5;
+}
+
+.scv-av__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  margin-top: 17px;
+}
+.scv-av__actions:empty { margin-top: 0; }
+
+.scv-av__reserve {
+  display: inline-block;
+  padding: 13px 26px;
+  background: var(--scv-gold);
+  color: var(--scv-ink);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: background .2s ease;
+}
+.scv-av__reserve:hover { background: #e6c34d; color: var(--scv-ink); }
+
+.scv-av__alt {
+  color: rgba(250, 248, 242, .8);
+  font-size: 13px;
+  text-decoration: none;
+  border-bottom: 1px solid var(--scv-rule);
+  padding-bottom: 2px;
+  transition: color .2s ease;
+}
+.scv-av__alt:hover { color: var(--scv-gold); }
+
+/* ---- docked (phones, where the cinematic hero is hidden) ---------------- */
+
+.scv-av--docked {
+  max-width: none;
+  padding: 0;
+  background: var(--scv-ink);
+}
+.scv-av--docked .scv-av__form {
+  border-top: 0;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.scv-av--docked .scv-av__panel {
+  border-left: 0;
+  border-right: 0;
+  background: rgba(73, 40, 24, .5);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* ---- responsive --------------------------------------------------------- */
+
+@media (max-width: 760px) {
+  .scv-av__form { grid-template-columns: 1fr 1fr; }
+  .scv-av__field--guests {
+    grid-column: 1 / -1;
+    border-right: 0;
+    border-top: 1px solid var(--scv-hair);
+  }
+  .scv-av__go {
+    grid-column: 1 / -1;
+    padding: 15px;
+    border-top: 1px solid var(--scv-hair);
+  }
+}
+
+@media (max-width: 400px) {
+  .scv-av__field { padding: 11px 14px; }
+  .scv-av__panel { padding: 17px 15px 18px; }
+}
+
+/* ---- quality floor ------------------------------------------------------ */
+
+.scv-av a:focus-visible,
+.scv-av button:focus-visible,
+.scv-av input:focus-visible {
+  outline: 2px solid var(--scv-gold);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scv-av *,
+  .scv-av *:before,
+  .scv-av *:after {
+    animation: none !important;
+    transition: none !important;
+  }
+}

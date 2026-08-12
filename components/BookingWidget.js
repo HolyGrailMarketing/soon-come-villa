@@ -33,6 +33,29 @@ export default function BookingWidget({
 
   useEffect(() => { fetchUnits().then(setUnits).catch(() => {}); }, []);
 
+  // Seed dates/guests from ?checkIn=&checkOut=&guests= so the homepage
+  // availability check can hand off without asking for the dates a second time.
+  // Read from location on mount rather than useSearchParams, which would force
+  // these statically prerendered routes into a Suspense boundary. Values are
+  // only a convenience — create-booking revalidates and re-prices everything.
+  const [seeded, setSeeded] = useState(false);
+  useEffect(() => {
+    if (seeded) return;
+    const q = new URLSearchParams(window.location.search);
+    const ci = q.get('checkIn') || '';
+    const co = q.get('checkOut') || '';
+    const g = parseInt(q.get('guests'), 10);
+    const YMD = /^\d{4}-\d{2}-\d{2}$/;
+    if (kind === 'ballroom') {
+      if (YMD.test(ci)) setCheckIn(ci);
+    } else if (YMD.test(ci) && YMD.test(co) && co > ci) {
+      setCheckIn(ci);
+      setCheckOut(co);
+    }
+    if (Number.isInteger(g) && g > 0) setGuests(g);
+    setSeeded(true);
+  }, [seeded, kind]);
+
   const rateUnit = units && (units[selUnit] || (selUnit === 'room' && units['room-1']) || (unit && units[unit]));
   const maxGuests = rateUnit?.max_guests ?? (kind === 'ballroom' ? 150 : 8);
 
@@ -59,8 +82,10 @@ export default function BookingWidget({
       },
     });
     return () => fp.destroy();
+    // `seeded` is a dep so the picker re-initialises once with any dates that
+    // arrived in the URL, since defaultDate is only read at construction.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, kind, rateUnit?.min_nights]);
+  }, [step, kind, rateUnit?.min_nights, seeded]);
 
   // Availability check when dates are set (details step only).
   useEffect(() => {

@@ -11,6 +11,7 @@
   <link href="css/normalize.css" rel="stylesheet" type="text/css">
   <link href="css/webflow.css" rel="stylesheet" type="text/css">
   <link href="css/soon-come-villa-7c6e6b.webflow.css" rel="stylesheet" type="text/css">
+  <link href="css/availability.css" rel="stylesheet" type="text/css">
   <link href="https://fonts.googleapis.com" rel="preconnect">
   <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin="anonymous">
   <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js" type="text/javascript"></script>
@@ -28,9 +29,31 @@
             <source src="videos/e13db795-1220-47a0-ad66-9b110349020a-2-transcode.webm" data-wf-ignore="true">
           </video></div>
         <div class="hero-fixed-image-overlay"></div>
-        <div class="hero-fixed-wrap">
+        <div class="hero-fixed-wrap scv-hero-stack">
           <div class="w-layout-blockcontainer container-full mmain-heading w-container">
             <h1 data-w-id="5b7ce081-9c2a-f6d1-aabb-830aab67e8d3" style="opacity:0" class="heading">SOON COME<br> VILLA</h1>
+          </div>
+          <!-- Availability check. Lives here on desktop; availability.js moves it
+               to #scv-av-mobile-mount below 480px, where this hero is hidden. -->
+          <div id="scv-av-hero-mount">
+            <div class="scv-av" id="scv-av" data-state="idle">
+              <form class="scv-av__form" id="scv-av-form" novalidate>
+                <div class="scv-av__field">
+                  <label for="scv-av-in">Arrive</label>
+                  <input type="date" id="scv-av-in" name="checkIn" autocomplete="off">
+                </div>
+                <div class="scv-av__field">
+                  <label for="scv-av-out">Depart</label>
+                  <input type="date" id="scv-av-out" name="checkOut" autocomplete="off">
+                </div>
+                <div class="scv-av__field scv-av__field--guests">
+                  <label for="scv-av-guests">Guests</label>
+                  <input type="number" id="scv-av-guests" name="guests" value="2" min="1" max="8" step="1" inputmode="numeric">
+                </div>
+                <button type="submit" class="scv-av__go">Check dates</button>
+              </form>
+              <div class="scv-av__answer" id="scv-av-answer" role="status" aria-live="polite"></div>
+            </div>
           </div>
           <div class="div-block-59">
             <a data-w-id="f84dbcc6-f29a-20ba-616a-da1c49504045" style="opacity:0" href="#hero-section" class="w-inline-block">
@@ -74,6 +97,8 @@
           </div>
         </div>
       </div>
+      <!-- availability.js docks the availability check here below 480px. -->
+      <div id="scv-av-mobile-mount"></div>
       <section id="hero-section" class="hero-section">
         <div class="w-layout-blockcontainer container-full hero w-container">
           <div class="hero-title-wrap">
@@ -647,6 +672,7 @@
   </div>
   <script src="https://d3e54v103j8qbb.cloudfront.net/js/jquery-3.5.1.min.dc5e7f18c8.js?site=67f3440249bf291aad85540e" type="text/javascript" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
   <script src="js/webflow.js" type="text/javascript"></script>
+  <script src="js/availability.js" type="text/javascript"></script>
   <!-- Vercel Web Analytics (static pages; React routes use <Analytics/> in app/layout.js) -->
   <script defer src="/_vercel/insights/script.js"></script>
 </body>
