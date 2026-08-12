@@ -1,0 +1,46 @@
+/* Quality floor for the exported Webflow pages.
+ *
+ * Two things the export does not give us:
+ *  1. Webflow's reset strips focus outlines, so every link, button and gallery
+ *     card on these pages is invisible to a keyboard user. :focus-visible keeps
+ *     the ring off mouse users. !important is deliberate — it is overriding a
+ *     reset that removes an accessibility affordance.
+ *  2. The gallery marquee is a timed IX2 animation that runs indefinitely and
+ *     ignores prefers-reduced-motion. IX2 writes inline transforms, but a
+ *     stylesheet !important still beats an inline style without one, so the
+ *     marquee can be frozen from CSS alone.
+ */
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #d4af37 !important;
+  outline-offset: 3px;
+}
+
+/* Webflow's nav and lightbox links sit on photography; give the ring a dark
+   companion so it reads against both the cream page and the images. */
+.lightbox-link:focus-visible,
+.footer-social-link:focus-visible,
+.navbar-brand-three:focus-visible {
+  outline-offset: 2px;
+  box-shadow: 0 0 0 5px rgba(26, 27, 31, .55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gallery-marquee-list {
+    transform: none !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
