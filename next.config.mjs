@@ -28,10 +28,15 @@ const nextConfig = {
         source: '/api/:path*',
         headers: [{ key: 'Cache-Control', value: 'no-store' }],
       },
-      // Long-cache immutable static assets (served from /public).
+      // Cache static assets from /public, but NOT as `immutable`: these are
+      // Webflow-exported filenames without a content hash, so a URL's bytes can
+      // change (asset swapped) and — critically — Next applies these headers to
+      // 404s too. `immutable` pinned missing-image 404s in the CDN and in every
+      // visitor's browser for a year, so an asset added later never loaded.
+      // max-age + ETag revalidation keeps it fast and lets mistakes self-heal.
       ...['images', 'css', 'videos', 'fonts'].map((dir) => ({
         source: `/${dir}/:path*`,
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=3600, must-revalidate' }],
       })),
     ];
   },
