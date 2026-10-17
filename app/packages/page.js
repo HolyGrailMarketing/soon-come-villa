@@ -4,6 +4,7 @@ import SiteNav from '@/components/SiteNav.js';
 import PackageQuote from '@/components/PackageQuote.js';
 
 const GOLD = '#d4af37';
+const FLIPBOOK_URL = 'https://heyzine.com/flip-book/94dc3da9d5.html';
 const jmd = (n) => 'J$' + Math.round(Number(n) || 0).toLocaleString();
 
 const TERMS = [
@@ -77,6 +78,21 @@ export default function PackagesPage() {
           </section>
         )}
 
+        <section className="pk-book">
+          <h2 className="pk-book-h">Browse our wedding brochure</h2>
+          <p className="pk-book-sub">Flip through the villa, the ballroom and every package detail.</p>
+          <div className="pk-book-frame">
+            <iframe
+              src={FLIPBOOK_URL}
+              title="Soon Come Villa wedding brochure"
+              loading="lazy"
+              allow="clipboard-write"
+              allowFullScreen
+            />
+          </div>
+          <a className="pk-book-link" href={FLIPBOOK_URL} target="_blank" rel="noopener">Open the brochure full screen ↗</a>
+        </section>
+
         <section className="pk-terms">
           <h2 className="pk-terms-h">Terms &amp; Conditions</h2>
           <ul>{TERMS.map((t, i) => <li key={i}>{t}</li>)}</ul>
@@ -105,11 +121,18 @@ export default function PackagesPage() {
         .pk-cta { margin-top: auto; }
         .pk-loading { color: #888; padding: 20px; }
         .pk-quote { max-width: 1080px; margin: 40px auto 0; padding: 24px 16px 0; }
+        .pk-book { max-width: 1080px; margin: 56px auto 0; padding: 0 16px; text-align: center; }
+        .pk-book-h { margin: 0 0 6px; font-size: 26px; }
+        .pk-book-sub { margin: 0 0 20px; color: #777; }
+        .pk-book-frame { aspect-ratio: 16 / 10; max-height: 80vh; width: 100%; border-radius: 16px; overflow: hidden; background: #f6f3ea; border: 1px solid #eee; box-shadow: 0 6px 24px rgba(0,0,0,.08); }
+        .pk-book-frame iframe { display: block; width: 100%; height: 100%; border: 0; }
+        .pk-book-link { display: inline-block; margin-top: 14px; color: ${GOLD}; font-weight: 700; text-decoration: none; }
+        .pk-book-link:hover { text-decoration: underline; }
         .pk-terms { max-width: 880px; margin: 48px auto 0; padding: 24px 16px; }
         .pk-terms-h { font-size: 22px; }
         .pk-terms ul { padding-left: 20px; }
         .pk-terms li { margin: 8px 0; color: #555; font-size: 14px; line-height: 1.5; }
-        @media (max-width: 600px) { .pk-hero { min-height: 280px; } .pk-title { font-size: 30px; } }
+        @media (max-width: 600px) { .pk-hero { min-height: 280px; } .pk-title { font-size: 30px; } .pk-book-frame { aspect-ratio: 3 / 4; } }
       `}</style>
     </>
   );
