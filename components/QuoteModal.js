@@ -74,7 +74,10 @@ export default function QuoteModal({ open, onClose }) {
 
         <div className="qm-body">
           {failed && (
-            <p className="qm-note">Packages didn’t load. Check your connection and reopen this window, or email us from the contact page.</p>
+            <p className="qm-note">
+              Packages didn’t load. Check your connection and reopen this window, or call{' '}
+              <a href="tel:+18762355881">876-235-5881</a> or email <a href="mailto:info@sooncomevilla.com">info@sooncomevilla.com</a>.
+            </p>
           )}
           {!failed && !data && <p className="qm-note">Loading packages…</p>}
 
@@ -120,7 +123,8 @@ export default function QuoteModal({ open, onClose }) {
         .qm-close { flex: none; width: 40px; height: 40px; display: grid; place-items: center; border: 0; border-radius: 999px; background: #f3efe4; color: #13302d; cursor: pointer; }
         .qm-close:hover { background: #ece3cf; }
         .qm-body { overflow-y: auto; padding: 24px 32px 32px; }
-        .qm-note { color: #4d5f5c; }
+        .qm-note { color: #4d5f5c; line-height: 1.6; }
+        .qm-note a { color: #2f6f68; font-weight: 600; }
         .qm-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
         .qm-pick { width: 100%; text-align: left; display: grid; gap: 6px; padding: 18px 20px; background: #fff; border: 1px solid #ddd5c2; border-radius: 4px; cursor: pointer; font: inherit; color: #13302d; transition: border-color .15s, background .15s; }
         .qm-pick:hover { border-color: #c9a227; background: #fbf8f0; }

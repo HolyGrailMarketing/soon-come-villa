@@ -91,6 +91,7 @@ export default function PackageQuote({ pkg, addons = [] }) {
         <p>Thank you! Your reference is <strong>{done.ref}</strong>. Our team will reach out shortly with a
           detailed quote for your <strong>{pkg.name}</strong> wedding.</p>
         <p className="pq-muted">A 50% deposit secures your date; the balance is due one month before the event.</p>
+        <p className="pq-muted">Questions? Call <a href="tel:+18762355881">876-235-5881</a> or email <a href="mailto:info@sooncomevilla.com">info@sooncomevilla.com</a>.</p>
         <style jsx>{styles}</style>
       </div>
     );
@@ -199,6 +200,7 @@ const styles = `
   .pq-total { font-weight: 800; font-size: 16px; border-bottom: 0; border-top: 2px solid #13302d; margin-top: 4px; padding-top: 12px; }
   .pq-cater { margin: 12px 0; padding: 10px 12px; background: #fff; border-radius: 4px; }
   .pq-done { text-align: center; max-width: 520px; margin: 12px auto; color: #1c2b29; }
+  .pq-done a { color: #2f6f68; font-weight: 600; }
   .pq-done h3 { font-family: 'Libre Baskerville', Georgia, serif; color: #13302d; }
   .pq-check { width: 64px; height: 64px; border-radius: 999px; background: #e3efe9; color: #2f6f68; font-size: 30px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
   @media (max-width: 760px) { .pq-grid { grid-template-columns: 1fr; } .pq-est { position: static; } }

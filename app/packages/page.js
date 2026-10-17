@@ -4,6 +4,8 @@ import SiteNav from '@/components/SiteNav.js';
 import QuoteModal from '@/components/QuoteModal.js';
 
 const FLIPBOOK_URL = 'https://heyzine.com/flip-book/94dc3da9d5.html';
+const PHONE = { label: '876-235-5881', href: 'tel:+18762355881' };
+const EMAIL = 'info@sooncomevilla.com';
 const FONTS = 'https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@400;500;600;700&display=swap';
 
 const STEPS = [
@@ -55,6 +57,7 @@ export default function PackagesPage() {
               <button className="wp-btn wp-btn-gold" onClick={openQuote}>Request a quote</button>
               <a className="wp-btn wp-btn-ghost" href="#brochure">See the brochure</a>
             </div>
+            <p className="wp-hero-call">Or call <a href={PHONE.href}>{PHONE.label}</a></p>
           </div>
         </header>
 
@@ -107,7 +110,13 @@ export default function PackagesPage() {
 
         <section className="wp-close">
           <div className="wp-wrap wp-close-in">
-            <p className="wp-close-line">Tell us your date and guest count, and we’ll come back with a full quote.</p>
+            <div>
+              <p className="wp-close-line">Tell us your date and guest count, and we’ll come back with a full quote.</p>
+              <p className="wp-contact">
+                Prefer to talk it through? Call <a href={PHONE.href}>{PHONE.label}</a> or
+                email <a href={`mailto:${EMAIL}`}>{EMAIL}</a>.
+              </p>
+            </div>
             <button className="wp-btn wp-btn-gold" onClick={openQuote}>Request a quote</button>
           </div>
         </section>
@@ -163,6 +172,9 @@ export default function PackagesPage() {
 
         .wp-close { background: var(--sand); padding: 56px 0; }
         .wp-close-in { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+        .wp-hero-call { margin: 18px 0 0; font-size: 15px; color: rgba(255,255,255,.85); }
+        .wp-hero-call a, .wp-contact a { color: inherit; font-weight: 600; text-decoration: underline; text-decoration-color: var(--gold); text-decoration-thickness: 2px; text-underline-offset: 4px; }
+        .wp-contact { margin: 12px 0 0; max-width: 52ch; font-size: 16px; line-height: 1.6; color: var(--ink); overflow-wrap: anywhere; }
         .wp-close-line { margin: 0; max-width: 34ch; font-family: 'Libre Baskerville', Georgia, serif; font-size: 24px; line-height: 1.35; color: var(--ink); }
 
         @media (max-width: 900px) {
@@ -184,7 +196,10 @@ export default function PackagesPage() {
           .wp-steps { padding-top: 64px; }
           .wp-step-list { grid-template-columns: 1fr; gap: 24px; }
           .wp-term-list { columns: 1; }
-          .wp-close-line { font-size: 20px; }
+          .wp-hero-call { margin: 18px 0 0; font-size: 15px; color: rgba(255,255,255,.85); }
+        .wp-hero-call a, .wp-contact a { color: inherit; font-weight: 600; text-decoration: underline; text-decoration-color: var(--gold); text-decoration-thickness: 2px; text-underline-offset: 4px; }
+        .wp-contact { margin: 12px 0 0; max-width: 52ch; font-size: 16px; line-height: 1.6; color: var(--ink); overflow-wrap: anywhere; }
+        .wp-close-line { font-size: 20px; }
           .wp-close-in .wp-btn { width: 100%; }
         }
       `}</style>
