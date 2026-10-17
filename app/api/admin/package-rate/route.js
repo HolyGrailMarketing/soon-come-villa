@@ -1,6 +1,6 @@
 // POST /api/admin/package-rate — owner-managed package pricing.
 //   Add-on: { addon: <slug>, price?, active? }
-//   Tier:   { package: <slug>, tier: <label>, venueCost?, cateringLow?, cateringHigh? }
+//   Tier:   { package: <slug>, tier: <label>, priceLow?, priceHigh? }  (needs db/packages_brochure.sql)
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db.js';
 import { getAdmin } from '@/lib/auth.js';
@@ -33,20 +33,22 @@ export async function POST(request) {
       return json({ ok: true, addon: rows[0] });
     }
 
-    // --- Tier venue cost / catering range ---
+    // --- Tier package price range ---
     if (b.package && b.tier) {
-      const venueCost = num(b.venueCost), low = num(b.cateringLow), high = num(b.cateringHigh);
-      for (const [k, v] of Object.entries({ venueCost, cateringLow: low, cateringHigh: high })) {
+      const low = num(b.priceLow), high = num(b.priceHigh);
+      for (const [k, v] of Object.entries({ priceLow: low, priceHigh: high })) {
         if (v !== null && (Number.isNaN(v) || v < 0)) return json({ error: `invalid ${k}` }, 400);
       }
+      if (low !== null && high !== null && high < low) return json({ error: 'priceHigh is below priceLow' }, 400);
+      // venue_cost mirrors price_low (see db/packages_brochure.sql).
       const rows = await sql`
         UPDATE package_tiers t
-           SET venue_cost    = COALESCE(${venueCost}::numeric, t.venue_cost),
-               catering_low  = COALESCE(${low}::numeric,  t.catering_low),
-               catering_high = COALESCE(${high}::numeric, t.catering_high)
+           SET price_low  = COALESCE(${low}::numeric,  t.price_low),
+               price_high = COALESCE(${high}::numeric, t.price_high),
+               venue_cost = COALESCE(${low}::numeric,  t.venue_cost)
           FROM packages p
          WHERE t.package_id = p.id AND p.slug = ${b.package} AND t.label = ${b.tier}
-        RETURNING t.label, t.venue_cost, t.catering_low, t.catering_high`;
+        RETURNING t.label, t.price_low, t.price_high`;
       if (!rows[0]) return json({ error: 'tier not found' }, 404);
       return json({ ok: true, tier: rows[0] });
     }

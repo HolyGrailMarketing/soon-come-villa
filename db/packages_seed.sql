@@ -1,6 +1,8 @@
 -- Soon Come Villa — wedding packages seed (idempotent). JMD figures from the
--- "I Do" Packages document. Apply after db/packages.sql:
+-- original "I Do" Packages document. Apply after db/packages.sql, then apply
+-- db/packages_brochure.sql, which updates everything to the current brochure:
 --   psql "$DATABASE_URL" -f db/packages_seed.sql
+--   psql "$DATABASE_URL" -f db/packages_brochure.sql
 
 -- Packages ----------------------------------------------------------------
 INSERT INTO packages (slug, name, tagline, catering_desc, highlights, sort) VALUES

@@ -116,14 +116,17 @@ export default function AdminPage() {
     load();
   }
 
-  async function editVenue(pkgSlug, tier) {
-    const v = prompt(`Venue cost for ${pkgSlug} ${tier.label} guests (JMD):`, String(tier.venueCost));
-    if (v === null || v === '') return;
+  async function editTierPrice(pkgSlug, tier) {
+    const low = prompt(`Lowest package price for ${pkgSlug} ${tier.label} guests (JMD):`, String(tier.priceLow));
+    if (low === null || low === '') return;
+    const high = prompt(`Highest package price for ${pkgSlug} ${tier.label} guests (JMD):`, String(tier.priceHigh));
+    if (high === null || high === '') return;
     const res = await fetch('/api/admin/package-rate', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ package: pkgSlug, tier: tier.label, venueCost: v }),
+      body: JSON.stringify({ package: pkgSlug, tier: tier.label, priceLow: low, priceHigh: high }),
     });
-    setNote((await res.json()).error ? 'Venue update failed.' : `Updated ${pkgSlug} ${tier.label}.`);
+    const out = await res.json();
+    setNote(out.error ? `Price update failed: ${out.error}.` : `Updated ${pkgSlug} ${tier.label}.`);
     load();
   }
 
@@ -260,7 +263,8 @@ export default function AdminPage() {
                     <td>{q.tier_label}</td>
                     <td>{ymd(q.event_date) || '—'}</td>
                     <td>{q.guests}</td>
-                    <td>{jmd(q.estimate_total)}<br /><small>+ catering {jmd(q.catering_low)}–{jmd(q.catering_high)}</small></td>
+                    <td>{jmd(q.estimate_total)}{q.estimate_high != null && Number(q.estimate_high) !== Number(q.estimate_total) && <>–{jmd(q.estimate_high)}</>}
+                      {q.catering_low != null && <><br /><small>+ catering {jmd(q.catering_low)}–{jmd(q.catering_high)}</small></>}</td>
                     <td>
                       <Badge s={q.status} />
                       <select className="ad-statussel" value={q.status} onChange={(e) => setQuoteStatus(q.id, e.target.value)}>
@@ -296,17 +300,18 @@ export default function AdminPage() {
               </table>
             </section>
             <section className="ad-pcard">
-              <h3>Venue costs <small>(coordination 35% + refundable incidental 20% are applied automatically)</small></h3>
+              <h3>Package prices <small>({pkgData.packages[0]
+                ? `coordination ${Math.round(pkgData.packages[0].coordinationPct * 100)}% + refundable incidental ${Math.round(pkgData.packages[0].incidentalPct * 100)}% are added automatically`
+                : 'coordination and the refundable incidental are added automatically'})</small></h3>
               <table className="ad-table">
-                <thead><tr><th>Package</th><th>Tier</th><th>Venue (JMD)</th><th>Catering range</th><th></th></tr></thead>
+                <thead><tr><th>Package</th><th>Guests</th><th>Price range (JMD)</th><th></th></tr></thead>
                 <tbody>
                   {pkgData.packages.flatMap((p) => p.tiers.map((t) => (
                     <tr key={p.slug + t.label}>
                       <td style={{ textTransform: 'capitalize' }}>{p.name}</td>
                       <td>{t.label}</td>
-                      <td>{jmd(t.venueCost)}</td>
-                      <td>{t.cateringLow != null ? `${jmd(t.cateringLow)}–${jmd(t.cateringHigh)}` : '—'}</td>
-                      <td><button className="button w-button" onClick={() => editVenue(p.slug, t)}>Edit</button></td>
+                      <td>{t.priceLow === t.priceHigh ? jmd(t.priceLow) : `${jmd(t.priceLow)}–${jmd(t.priceHigh)}`}</td>
+                      <td><button className="button w-button" onClick={() => editTierPrice(p.slug, t)}>Edit</button></td>
                     </tr>
                   )))}
                 </tbody>

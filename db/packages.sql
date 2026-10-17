@@ -6,7 +6,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;   -- gen_random_uuid()
 
 -- ---------------------------------------------------------------------------
 -- packages: the three wedding tiers (Hummingbird / Flamingo / Peacock).
--- coordination_pct / incidental_pct are applied to the tier venue cost.
+-- coordination_pct / incidental_pct are applied to the tier package price.
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS packages (
   id              serial PRIMARY KEY,
@@ -15,14 +15,15 @@ CREATE TABLE IF NOT EXISTS packages (
   tagline         text,
   catering_desc   text,
   highlights      jsonb NOT NULL DEFAULT '[]'::jsonb,   -- string[]
-  coordination_pct numeric(5,4) NOT NULL DEFAULT 0.35,
+  coordination_pct numeric(5,4) NOT NULL DEFAULT 0.25,
   incidental_pct   numeric(5,4) NOT NULL DEFAULT 0.20,
   active          boolean NOT NULL DEFAULT true,
   sort            int NOT NULL DEFAULT 0
 );
 
 -- ---------------------------------------------------------------------------
--- package_tiers: venue cost + catering range per guest-count bracket.
+-- package_tiers: package price range per guest-count bracket (price_low /
+-- price_high). venue_cost and the catering range predate the brochure pricing.
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS package_tiers (
   id            serial PRIMARY KEY,
@@ -33,6 +34,8 @@ CREATE TABLE IF NOT EXISTS package_tiers (
   venue_cost    numeric(12,2) NOT NULL,
   catering_low  numeric(12,2),
   catering_high numeric(12,2),
+  price_low     numeric(12,2),
+  price_high    numeric(12,2),
   UNIQUE (package_id, label)
 );
 
@@ -48,7 +51,7 @@ CREATE TABLE IF NOT EXISTS package_addons (
   name        text NOT NULL,
   description text,
   price       numeric(12,2) NOT NULL DEFAULT 0,
-  pricing     text NOT NULL DEFAULT 'flat' CHECK (pricing IN ('flat','per_guest','per_night')),
+  pricing     text NOT NULL DEFAULT 'flat' CHECK (pricing IN ('flat','per_guest','per_night','per_unit')),
   active      boolean NOT NULL DEFAULT false,
   sort        int NOT NULL DEFAULT 0
 );
@@ -70,7 +73,8 @@ CREATE TABLE IF NOT EXISTS quote_requests (
   incidental_amt   numeric(12,2) NOT NULL,
   addons          jsonb NOT NULL DEFAULT '[]'::jsonb,   -- [{slug,name,price,qty,line}]
   addons_total    numeric(12,2) NOT NULL DEFAULT 0,
-  estimate_total  numeric(12,2) NOT NULL,
+  estimate_total  numeric(12,2) NOT NULL,          -- low end of the estimate range
+  estimate_high   numeric(12,2),
   catering_low    numeric(12,2),
   catering_high   numeric(12,2),
   first_name      text NOT NULL,

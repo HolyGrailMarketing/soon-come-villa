@@ -64,7 +64,7 @@ export default function QuoteModal({ open, onClose }) {
           <div>
             <h2 id="qm-title" className="qm-title">{pkg ? `Your ${pkg.name} wedding` : 'Request a quote'}</h2>
             <p className="qm-sub">
-              {pkg ? 'Set your guest count, date and extras. You’ll see an estimate as you go.' : 'Choose the package closest to the day you have in mind. You can change everything after.'}
+              {pkg ? 'Set your guest count, date and extras. You’ll see an estimate as you go.' : 'Choose the package closest to the day you have in mind. Packages are for 10 to 100 guests; prices are before coordination and the refundable incidental.'}
             </p>
           </div>
           <button className="qm-close" onClick={onClose} aria-label="Close">
@@ -81,7 +81,7 @@ export default function QuoteModal({ open, onClose }) {
           {!pkg && packages.length > 0 && (
             <ul className="qm-list" role="list">
               {packages.map((p) => {
-                const from = p.tiers?.[0]?.venueCost;
+                const from = p.tiers?.length ? Math.min(...p.tiers.map((t) => t.priceLow)) : null;
                 return (
                   <li key={p.slug}>
                     <button className="qm-pick" onClick={() => setSlug(p.slug)}>
@@ -90,9 +90,7 @@ export default function QuoteModal({ open, onClose }) {
                         {from != null && <span className="qm-pick-from">from {jmd(from)}</span>}
                       </span>
                       {p.tagline && <span className="qm-pick-tag">{p.tagline}</span>}
-                      {p.highlights?.length > 0 && (
-                        <span className="qm-pick-feats">{p.highlights.slice(0, 4).join(', ')}</span>
-                      )}
+                      {p.catering_desc && <span className="qm-pick-feats">{p.catering_desc}</span>}
                     </button>
                   </li>
                 );

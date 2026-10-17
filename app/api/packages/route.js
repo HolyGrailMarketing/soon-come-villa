@@ -2,6 +2,7 @@
 // Drives the /packages page; prices are server-driven.
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db.js';
+import { tierPrices } from '@/lib/packages.js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -14,9 +15,9 @@ export async function GET() {
       SELECT id, slug, name, tagline, catering_desc, highlights,
              coordination_pct, incidental_pct
         FROM packages WHERE active = true ORDER BY sort, id`;
-    const tiers = await sql`
-      SELECT package_id, label, min_guests, max_guests, venue_cost, catering_low, catering_high
-        FROM package_tiers ORDER BY min_guests`;
+    // to_jsonb(t) so price_low/price_high are read when db/packages_brochure.sql
+    // has added them, and fall back to venue_cost before it has.
+    const tiers = (await sql`SELECT to_jsonb(t) AS t FROM package_tiers t ORDER BY t.min_guests`).map((r) => r.t);
     const addons = await sql`
       SELECT slug, name, description, price, pricing
         FROM package_addons WHERE active = true ORDER BY sort, id`;
@@ -31,12 +32,7 @@ export async function GET() {
       incidental_pct: Number(p.incidental_pct),
       tiers: tiers
         .filter((t) => t.package_id === p.id)
-        .map((t) => ({
-          label: t.label, minGuests: t.min_guests, maxGuests: t.max_guests,
-          venueCost: Number(t.venue_cost),
-          cateringLow: t.catering_low == null ? null : Number(t.catering_low),
-          cateringHigh: t.catering_high == null ? null : Number(t.catering_high),
-        })),
+        .map(tierPrices),
     }));
 
     return NextResponse.json({

@@ -57,13 +57,15 @@ check-in.
 
 ## Wedding packages (quote requests — no online payment)
 
-`/packages` lets guests pick a wedding package (Hummingbird / Flamingo / Peacock), customize it
-(date, guest tier, priced add-ons), see a live **JMD** estimate (venue + 35% coordination + 20%
-refundable incidental + add-ons; catering shown as an indicative range), and submit a **quote request**.
+`/packages` shows the wedding brochure (Heyzine flipbook) and a **Request a quote** popup where guests
+pick a package (Hummingbird / Flamingo / Peacock), customize it (date, guest tier, add-ons) and see a live
+**JMD estimate range**: the tier's package price range (buffet included) + 25% coordination & professional
+services + 20% refundable incidental + add-ons. Then they submit a **quote request**.
 No DimePay — requests land in the admin dashboard (Wedding quotes tab) for offline follow-up + deposit.
-Schema/seed: `db/packages.sql`, `db/packages_seed.sql` (tables `packages`, `package_tiers`,
-`package_addons`, `quote_requests`). Estimate logic: `lib/packages.js` (server recomputes on submit).
-Add-ons seed inactive at price 0 — set JMD prices + activate them in Admin → Package pricing.
+Schema/seed: `db/packages.sql`, `db/packages_seed.sql`, then **`db/packages_brochure.sql`**, which adds the
+`price_low`/`price_high` tier columns, `quote_requests.estimate_high` and the `per_unit` add-on pricing, and
+loads the brochure's prices, inclusions and 14 add-ons. Estimate logic: `lib/packages.js` (server recomputes
+on submit). Edit tier price ranges and add-ons in Admin → Package pricing.
 
 ## API
 

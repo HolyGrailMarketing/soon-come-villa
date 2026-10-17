@@ -7,23 +7,25 @@ const FLIPBOOK_URL = 'https://heyzine.com/flip-book/94dc3da9d5.html';
 const FONTS = 'https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@400;500;600;700&display=swap';
 
 const STEPS = [
-  { h: 'Request a quote', p: 'Pick a package, your guest count, date and extras. You’ll see an estimate before you send anything.' },
-  { h: 'Walk the grounds', p: 'Tour the lawn, ballroom and pool deck with us and bring every question you have.' },
-  { h: 'Hold your date', p: 'A 50% deposit secures the day once you’re happy with the final quote.' },
-  { h: 'Settle the balance', p: 'Full payment is due one month before the wedding. Then the day is yours.' },
+  { h: 'Request a quote', p: 'Pick a package, your guest count, date and extras. You’ll see an estimated range before you send anything.' },
+  { h: 'Walk through the venue', p: 'Tour the gazebo, ballroom and pool deck with us so we can answer every question as you plan.' },
+  { h: 'Pay the deposit', p: 'We send a pro forma invoice. A 50% deposit secures your date.' },
+  { h: 'Final details', p: 'Send your guest list one week before the wedding. The balance is due one month before.' },
 ];
 
+// From the brochure's Terms & Conditions page.
 const TERMS = [
-  'Packages exclude decorations and unique amenities (tents, cake, garments, guest books, flowers, games, fireworks, security). We recommend our preferred vendors for your decor.',
-  'Videography, online streaming, and photography are not included, but we can recommend preferred vendors.',
-  'Wines, champagne, and liquors are not included; a bar is available with a bartender at an additional rate.',
-  'The PA and music system are included; the DJ and team are contracted at an additional rate.',
-  'Additional rooms after the event are charged at the standard room rate of US$150.00 per room per night — book ahead.',
-  'Support personnel (makeup artists, decorators, musicians) count toward your guest list if present; share their details in advance for clearance.',
-  'Your guest list must include the members of your bridal party.',
-  'A 50% deposit is encouraged once you choose your package and receive the quotation; full payment is due one month before the event.',
-  'In the event of a natural disaster or act of God, we will gladly help you reschedule at no additional cost.',
-  'We recommend scheduling a venue walk-through so we can address all your questions as we coordinate your perfect day.',
+  'Packages exclude decorations and unique amenities such as tents, cake, garments, guest books, flowers, games, fireworks and security personnel. Our preferred vendors are MJ’s Wedding Amenities and More for décor and Muffet’s Passion for cakes. If you use your own decorator, plan a thorough walk-through at least 6 weeks ahead.',
+  'Packages don’t include a videographer, online streaming or a photographer, but we can recommend preferred vendors.',
+  'Wines, champagne and liquors are not included. The bar is available, and a bartender is included in the package price.',
+  'The PA and music system are included, and so is a DJ.',
+  'Rooms after the event are charged at our standard rate of US$158 per room per night, or US$600 for the whole house. Book ahead.',
+  'Support personnel such as makeup artists, decorators, drivers and musicians count toward your guest list if they’ll be there. Send their details beforehand so they can be cleared for entry.',
+  'Your guest list must include your bridal party and be sent to us one week before the wedding.',
+  'A 50% deposit is encouraged once you’ve received a pro forma invoice. Full payment is due one month before the event.',
+  'If a natural disaster or act of God, such as a hurricane or earthquake, affects your date, we’ll help you reschedule as soon as possible at no additional cost.',
+  'Coordination and professional services rates are non-negotiable and calculated on the package you choose, so the package price is not the final cost of your wedding.',
+  'Weddings that start more than half an hour after the scheduled time incur a fee of 10% of the original package cost.',
 ];
 
 export default function PackagesPage() {
@@ -44,10 +46,10 @@ export default function PackagesPage() {
       <main className="wp">
         <header className="wp-hero">
           <div className="wp-hero-in">
-            <h1 className="wp-title">Say “I do” on the lawn at Soon Come Villa</h1>
+            <h1 className="wp-title">Say “I do” under the gazebo at Soon Come Villa</h1>
             <p className="wp-lede">
-              Ceremony under the gazebo, dinner in the ballroom, and rooms at the villa for the people you love most.
-              Three wedding packages in Runaway Bay, shaped around your guest list.
+              Three ways to marry in Runaway Bay: Hummingbird, simple and elegant; Flamingo, delightful and adorable;
+              Peacock, extraordinary and flamboyant. For 10 to 100 guests, from J$180,000, with the buffet, DJ and a grounds photo shoot included.
             </p>
             <div className="wp-actions">
               <button className="wp-btn wp-btn-gold" onClick={openQuote}>Request a quote</button>
@@ -60,7 +62,7 @@ export default function PackagesPage() {
           <div className="wp-wrap">
             <div className="wp-book-head">
               <h2 id="wp-book-h" className="wp-h2 wp-on-ink">The wedding brochure</h2>
-              <p className="wp-book-sub">Every package, what’s included and the spaces you’ll use. Turn the pages here or open it full screen.</p>
+              <p className="wp-book-sub">Menus, prices for every guest count, what each package includes and the add-ons. Turn the pages here or open it full screen.</p>
             </div>
             <div className="wp-book-frame">
               <iframe
@@ -96,7 +98,10 @@ export default function PackagesPage() {
         <section className="wp-terms" aria-labelledby="wp-terms-h">
           <div className="wp-wrap wp-terms-grid">
             <h2 id="wp-terms-h" className="wp-h2">Good to know</h2>
-            <ul className="wp-term-list">{TERMS.map((t, i) => <li key={i}>{t}</li>)}</ul>
+            <div>
+              <ol className="wp-term-list">{TERMS.map((t, i) => <li key={i}>{t}</li>)}</ol>
+              <p className="wp-disclaimer">Prices may change with inflation and rising costs. Please confirm your package with us before finalising wedding plans.</p>
+            </div>
           </div>
         </section>
 
@@ -153,7 +158,8 @@ export default function PackagesPage() {
         .wp-terms-grid { display: grid; grid-template-columns: 280px 1fr; gap: 48px; border-top: 1px solid var(--sand); padding-top: 56px; }
         .wp-term-list { margin: 0; padding: 0 0 0 20px; columns: 2; column-gap: 40px; }
         .wp-term-list li { break-inside: avoid; margin: 0 0 14px; font-size: 14px; line-height: 1.6; color: var(--muted); }
-        .wp-term-list li::marker { color: var(--gold); }
+        .wp-term-list li::marker { color: var(--gold); font-weight: 700; }
+        .wp-disclaimer { margin: 24px 0 0; max-width: 70ch; font-size: 14px; line-height: 1.6; font-style: italic; color: var(--muted); }
 
         .wp-close { background: var(--sand); padding: 56px 0; }
         .wp-close-in { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
