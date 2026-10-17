@@ -5,7 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import flatpickr from 'flatpickr';
 import { computeEstimate } from '@/lib/packages.js';
 
-const GOLD = '#d4af37';
+const GOLD = '#c9a227';
 const jmd = (n) => 'J$' + Math.round(Number(n) || 0).toLocaleString();
 
 export default function PackageQuote({ pkg, addons = [] }) {
@@ -142,7 +142,7 @@ export default function PackageQuote({ pkg, addons = [] }) {
           value={form.specialRequests} onChange={(e) => setForm({ ...form, specialRequests: e.target.value })} />
 
         {msg && <div className="pq-err">{msg}</div>}
-        <button className="button button-primary w-button" type="submit" disabled={busy} style={{ background: GOLD }}>
+        <button className="pq-submit" type="submit" disabled={busy}>
           {busy ? 'Sending…' : 'Request a quote'}
         </button>
       </form>
@@ -167,24 +167,32 @@ export default function PackageQuote({ pkg, addons = [] }) {
 }
 
 const styles = `
-  .pq-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 24px; align-items: start; }
-  .pq-card { background: #fff; border: 1px solid #eee; border-radius: 16px; box-shadow: 0 6px 24px rgba(0,0,0,.08); padding: 24px; }
-  .pq-h { margin: 0 0 16px; font-size: 20px; }
-  .pq-field { display: grid; gap: 6px; margin-bottom: 14px; font-size: 14px; color: #444; }
-  .pq-label { font-size: 14px; color: #444; }
-  .pq-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
-  .pq-two + input, form textarea { margin-bottom: 14px; }
-  .pq-addons { display: grid; gap: 12px; margin-top: 6px; }
-  .pq-addon { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid #eee; border-radius: 10px; }
-  .pq-addon label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
+  .pq-grid { display: grid; grid-template-columns: 1.25fr .75fr; gap: 28px; align-items: start; }
+  .pq-card { background: #fff; padding: 0; }
+  .pq-h { margin: 0 0 16px; font-family: 'Libre Baskerville', Georgia, serif; font-size: 19px; color: #13302d; }
+  .pq-field { display: grid; gap: 6px; margin-bottom: 16px; font-size: 14px; font-weight: 600; color: #13302d; }
+  .pq-label { font-size: 14px; font-weight: 600; color: #13302d; }
+  .pq-card .w-input { border: 1px solid #d8d0bd; border-radius: 4px; font-family: Montserrat, sans-serif; font-weight: 400; font-size: 15px; color: #1c2b29; height: auto; padding: 10px 12px; }
+  .pq-card .w-input[readonly] { background: #fff; cursor: pointer; }
+  .pq-card .w-input:focus { border-color: #2f6f68; outline: 2px solid #2f6f6833; }
+  .pq-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .pq-two + input, form textarea { margin-bottom: 12px; }
+  .pq-addons { display: grid; gap: 8px; margin-top: 4px; }
+  .pq-addon { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid #e6dfcf; border-radius: 4px; font-weight: 400; }
+  .pq-addon label { display: flex; gap: 10px; align-items: center; cursor: pointer; color: #1c2b29; font-weight: 500; }
+  .pq-addon input[type=checkbox] { accent-color: #2f6f68; width: 16px; height: 16px; }
   .pq-qty { width: 90px; }
-  .pq-muted { color: #888; font-size: 13px; }
-  .pq-err { color: #b00; margin-bottom: 12px; }
-  .pq-est { position: sticky; top: 16px; }
-  .pq-row { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid #f1f1f1; font-size: 14px; }
-  .pq-total { font-weight: 800; font-size: 16px; border-bottom: 0; border-top: 2px solid ${GOLD}; margin-top: 4px; padding-top: 12px; }
-  .pq-cater { margin: 12px 0; padding: 10px 12px; background: #faf6ea; border-radius: 8px; }
-  .pq-done { text-align: center; max-width: 560px; margin: 0 auto; }
-  .pq-check { width: 64px; height: 64px; border-radius: 999px; background: #e6f6ee; color: #0a7d55; font-size: 30px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+  .pq-muted { color: #6b7a77; font-size: 13px; font-weight: 400; line-height: 1.5; }
+  .pq-err { color: #a3261b; margin-bottom: 12px; }
+  .pq-submit { width: 100%; margin-top: 4px; padding: 14px 20px; border: 0; border-radius: 999px; background: ${GOLD}; color: #13302d; font: 700 15px Montserrat, sans-serif; cursor: pointer; }
+  .pq-submit:hover { background: #d9b43a; }
+  .pq-submit:disabled { opacity: .6; cursor: progress; }
+  .pq-est { position: sticky; top: 0; background: #f6f2e8; border-radius: 4px; padding: 20px; }
+  .pq-row { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid #e6dfcf; font-size: 14px; color: #1c2b29; }
+  .pq-total { font-weight: 800; font-size: 16px; border-bottom: 0; border-top: 2px solid #13302d; margin-top: 4px; padding-top: 12px; }
+  .pq-cater { margin: 12px 0; padding: 10px 12px; background: #fff; border-radius: 4px; }
+  .pq-done { text-align: center; max-width: 520px; margin: 12px auto; color: #1c2b29; }
+  .pq-done h3 { font-family: 'Libre Baskerville', Georgia, serif; color: #13302d; }
+  .pq-check { width: 64px; height: 64px; border-radius: 999px; background: #e3efe9; color: #2f6f68; font-size: 30px; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
   @media (max-width: 760px) { .pq-grid { grid-template-columns: 1fr; } .pq-est { position: static; } }
 `;

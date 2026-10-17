@@ -6,7 +6,7 @@ import { useState } from 'react';
 const GOLD = '#d4af37';
 const LINKS = [
   { href: '/index.html', label: 'Home' },
-  { href: '/packages', label: 'Weddings' },
+  { href: '/packages', label: 'Wedding Packages' },
   { href: '/ballroom', label: 'Events' },
   { href: '/contact-us.html', label: 'Contact' },
 ];

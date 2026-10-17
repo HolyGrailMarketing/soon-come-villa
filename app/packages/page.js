@@ -1,11 +1,17 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import SiteNav from '@/components/SiteNav.js';
-import PackageQuote from '@/components/PackageQuote.js';
+import QuoteModal from '@/components/QuoteModal.js';
 
-const GOLD = '#d4af37';
 const FLIPBOOK_URL = 'https://heyzine.com/flip-book/94dc3da9d5.html';
-const jmd = (n) => 'J$' + Math.round(Number(n) || 0).toLocaleString();
+const FONTS = 'https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@400;500;600;700&display=swap';
+
+const STEPS = [
+  { h: 'Request a quote', p: 'Pick a package, your guest count, date and extras. You’ll see an estimate before you send anything.' },
+  { h: 'Walk the grounds', p: 'Tour the lawn, ballroom and pool deck with us and bring every question you have.' },
+  { h: 'Hold your date', p: 'A 50% deposit secures the day once you’re happy with the final quote.' },
+  { h: 'Settle the balance', p: 'Full payment is due one month before the wedding. Then the day is yours.' },
+];
 
 const TERMS = [
   'Packages exclude decorations and unique amenities (tents, cake, garments, guest books, flowers, games, fireworks, security). We recommend our preferred vendors for your decor.',
@@ -21,118 +27,160 @@ const TERMS = [
 ];
 
 export default function PackagesPage() {
-  const [data, setData] = useState(null);
-  const [selected, setSelected] = useState(null);
-  const quoteRef = useRef(null);
+  const [quoteOpen, setQuoteOpen] = useState(false);
+  const openQuote = () => setQuoteOpen(true);
+  const closeQuote = useCallback(() => setQuoteOpen(false), []);
 
+  // /packages?quote=1 opens the quote popup directly.
   useEffect(() => {
-    fetch('/api/packages').then((r) => r.json()).then(setData).catch(() => {});
+    if (new URLSearchParams(window.location.search).get('quote') === '1') setQuoteOpen(true);
   }, []);
-
-  const packages = data?.packages || [];
-  const addons = data?.addons || [];
-  const selPkg = packages.find((p) => p.slug === selected);
-
-  function choose(slug) {
-    setSelected(slug);
-    setTimeout(() => quoteRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
-  }
 
   return (
     <>
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+      <link rel="stylesheet" href={FONTS} />
       <SiteNav />
-      <main className="pk-main">
-        <header className="pk-hero" style={{ backgroundImage: 'url(/images/DJI_20250418_165327_3.avif)' }}>
-          <div className="pk-hero-in">
-            <span className="pk-eyebrow">Weddings at Soon Come Villa</span>
-            <h1 className="pk-title">“I Do” Packages</h1>
-            <p className="pk-sub">Three curated wedding experiences in Runaway Bay — select a package, customize it, and request your quote.</p>
+      <main className="wp">
+        <header className="wp-hero">
+          <div className="wp-hero-in">
+            <h1 className="wp-title">Say “I do” on the lawn at Soon Come Villa</h1>
+            <p className="wp-lede">
+              Ceremony under the gazebo, dinner in the ballroom, and rooms at the villa for the people you love most.
+              Three wedding packages in Runaway Bay, shaped around your guest list.
+            </p>
+            <div className="wp-actions">
+              <button className="wp-btn wp-btn-gold" onClick={openQuote}>Request a quote</button>
+              <a className="wp-btn wp-btn-ghost" href="#brochure">See the brochure</a>
+            </div>
           </div>
         </header>
 
-        <div className="pk-cards">
-          {packages.map((p) => {
-            const from = p.tiers?.[0]?.venueCost;
-            return (
-              <article key={p.slug} className={`pk-card ${selected === p.slug ? 'pk-active' : ''}`}>
-                <div className="pk-card-head">
-                  <h2 className="pk-name">{p.name}</h2>
-                  <p className="pk-tag">{p.tagline}</p>
-                  {from != null && <div className="pk-from">from <strong>{jmd(from)}</strong></div>}
-                </div>
-                <ul className="pk-feats">
-                  {(p.highlights || []).map((h) => <li key={h}>{h}</li>)}
-                </ul>
-                <button className="button button-primary w-button pk-cta" onClick={() => choose(p.slug)}>
-                  {selected === p.slug ? 'Selected ✓' : 'Request a quote'}
-                </button>
-              </article>
-            );
-          })}
-          {packages.length === 0 && <p className="pk-loading">Loading packages…</p>}
-        </div>
-
-        {selPkg && (
-          <section ref={quoteRef} className="pk-quote">
-            <PackageQuote pkg={selPkg} addons={addons} />
-          </section>
-        )}
-
-        <section className="pk-book">
-          <h2 className="pk-book-h">Browse our wedding brochure</h2>
-          <p className="pk-book-sub">Flip through the villa, the ballroom and every package detail.</p>
-          <div className="pk-book-frame">
-            <iframe
-              src={FLIPBOOK_URL}
-              title="Soon Come Villa wedding brochure"
-              loading="lazy"
-              allow="clipboard-write"
-              allowFullScreen
-            />
+        <section id="brochure" className="wp-book" aria-labelledby="wp-book-h">
+          <div className="wp-wrap">
+            <div className="wp-book-head">
+              <h2 id="wp-book-h" className="wp-h2 wp-on-ink">The wedding brochure</h2>
+              <p className="wp-book-sub">Every package, what’s included and the spaces you’ll use. Turn the pages here or open it full screen.</p>
+            </div>
+            <div className="wp-book-frame">
+              <iframe
+                src={FLIPBOOK_URL}
+                title="Soon Come Villa wedding brochure"
+                loading="lazy"
+                allow="clipboard-write"
+                allowFullScreen
+              />
+            </div>
+            <div className="wp-book-foot">
+              <a className="wp-book-link" href={FLIPBOOK_URL} target="_blank" rel="noopener">Open the brochure full screen</a>
+              <button className="wp-btn wp-btn-gold" onClick={openQuote}>Request a quote</button>
+            </div>
           </div>
-          <a className="pk-book-link" href={FLIPBOOK_URL} target="_blank" rel="noopener">Open the brochure full screen ↗</a>
         </section>
 
-        <section className="pk-terms">
-          <h2 className="pk-terms-h">Terms &amp; Conditions</h2>
-          <ul>{TERMS.map((t, i) => <li key={i}>{t}</li>)}</ul>
+        <section className="wp-steps" aria-labelledby="wp-steps-h">
+          <div className="wp-wrap">
+            <h2 id="wp-steps-h" className="wp-h2">From first message to wedding day</h2>
+            <ol className="wp-step-list">
+              {STEPS.map((s, i) => (
+                <li key={s.h} className="wp-step">
+                  <span className="wp-step-n" aria-hidden="true">{i + 1}</span>
+                  <h3 className="wp-step-h">{s.h}</h3>
+                  <p className="wp-step-p">{s.p}</p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </section>
+
+        <section className="wp-terms" aria-labelledby="wp-terms-h">
+          <div className="wp-wrap wp-terms-grid">
+            <h2 id="wp-terms-h" className="wp-h2">Good to know</h2>
+            <ul className="wp-term-list">{TERMS.map((t, i) => <li key={i}>{t}</li>)}</ul>
+          </div>
+        </section>
+
+        <section className="wp-close">
+          <div className="wp-wrap wp-close-in">
+            <p className="wp-close-line">Tell us your date and guest count, and we’ll come back with a full quote.</p>
+            <button className="wp-btn wp-btn-gold" onClick={openQuote}>Request a quote</button>
+          </div>
         </section>
       </main>
 
+      <QuoteModal open={quoteOpen} onClose={closeQuote} />
+
       <style jsx>{`
-        .pk-main { padding-bottom: 64px; }
-        .pk-hero { position: relative; min-height: 360px; display: flex; align-items: flex-end; background-size: cover; background-position: center; color: #fff; }
-        .pk-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,.15), rgba(0,0,0,.75)); }
-        .pk-hero-in { position: relative; z-index: 1; max-width: 1080px; width: 100%; margin: 0 auto; padding: 32px 24px 40px; }
-        .pk-eyebrow { display: inline-block; background: ${GOLD}; color: #1a1a1a; font-size: 13px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; padding: 5px 12px; border-radius: 999px; margin-bottom: 12px; }
-        .pk-title { margin: 0 0 8px; font-size: 42px; color: #fff; }
-        .pk-sub { margin: 0; max-width: 640px; font-size: 17px; color: rgba(255,255,255,.92); }
-        .pk-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 28px; max-width: 1080px; margin: 40px auto 0; padding: 0 16px; align-items: start; }
-        .pk-card { background: #fff; border: 1px solid #eee; border-radius: 16px; box-shadow: 0 6px 24px rgba(0,0,0,.08); padding: 26px; display: flex; flex-direction: column; gap: 16px; transition: transform .2s, box-shadow .2s, border-color .2s; }
-        .pk-card:hover { transform: translateY(-6px); box-shadow: 0 16px 40px rgba(0,0,0,.16); }
-        .pk-active { border-color: ${GOLD}; box-shadow: 0 0 0 2px ${GOLD}33, 0 16px 40px rgba(0,0,0,.16); }
-        .pk-name { margin: 0; font-size: 26px; }
-        .pk-tag { margin: 2px 0 0; color: #777; font-style: italic; }
-        .pk-from { margin-top: 10px; font-size: 15px; color: #333; }
-        .pk-from strong { font-size: 20px; color: ${GOLD}; }
-        .pk-feats { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; flex: 1; }
-        .pk-feats li { position: relative; padding-left: 24px; font-size: 14px; color: #333; }
-        .pk-feats li::before { content: "✓"; position: absolute; left: 0; color: ${GOLD}; font-weight: 800; }
-        .pk-cta { margin-top: auto; }
-        .pk-loading { color: #888; padding: 20px; }
-        .pk-quote { max-width: 1080px; margin: 40px auto 0; padding: 24px 16px 0; }
-        .pk-book { max-width: 1080px; margin: 56px auto 0; padding: 0 16px; text-align: center; }
-        .pk-book-h { margin: 0 0 6px; font-size: 26px; }
-        .pk-book-sub { margin: 0 0 20px; color: #777; }
-        .pk-book-frame { aspect-ratio: 16 / 10; max-height: 80vh; width: 100%; border-radius: 16px; overflow: hidden; background: #f6f3ea; border: 1px solid #eee; box-shadow: 0 6px 24px rgba(0,0,0,.08); }
-        .pk-book-frame iframe { display: block; width: 100%; height: 100%; border: 0; }
-        .pk-book-link { display: inline-block; margin-top: 14px; color: ${GOLD}; font-weight: 700; text-decoration: none; }
-        .pk-book-link:hover { text-decoration: underline; }
-        .pk-terms { max-width: 880px; margin: 48px auto 0; padding: 24px 16px; }
-        .pk-terms-h { font-size: 22px; }
-        .pk-terms ul { padding-left: 20px; }
-        .pk-terms li { margin: 8px 0; color: #555; font-size: 14px; line-height: 1.5; }
-        @media (max-width: 600px) { .pk-hero { min-height: 280px; } .pk-title { font-size: 30px; } .pk-book-frame { aspect-ratio: 3 / 4; } }
+        .wp { --ink: #13302d; --sea: #2f6f68; --sand: #ece3cf; --gold: #c9a227; --text: #1c2b29; --muted: #4d5f5c;
+              font-family: Montserrat, sans-serif; color: var(--text); background: #fff; }
+        .wp-wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+        .wp :global(:focus-visible) { outline: 2px solid var(--sea); outline-offset: 3px; }
+
+        .wp-hero { position: relative; min-height: min(78vh, 680px); display: flex; align-items: flex-end; color: #fff;
+                   background: #13302d url(/images/lawn-gazebo-full.avif) center 60% / cover no-repeat; }
+        .wp-hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(10,28,26,.82) 0%, rgba(10,28,26,.45) 55%, rgba(10,28,26,.1) 100%); }
+        .wp-hero-in { position: relative; z-index: 1; max-width: 1120px; width: 100%; margin: 0 auto; padding: 64px 24px 72px; }
+        .wp-title { margin: 0; max-width: 15ch; font-family: 'Libre Baskerville', Georgia, serif; font-weight: 400; font-size: 56px; line-height: 1.12; letter-spacing: -.01em; color: #fff; }
+        .wp-lede { margin: 20px 0 0; max-width: 52ch; font-size: 18px; line-height: 1.6; color: rgba(255,255,255,.9); }
+        .wp-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+
+        .wp-btn { display: inline-flex; align-items: center; justify-content: center; min-height: 48px; padding: 0 26px; border-radius: 999px; font: 700 15px Montserrat, sans-serif; text-decoration: none; cursor: pointer; border: 1px solid transparent; }
+        .wp-btn-gold { background: var(--gold); color: var(--ink); }
+        .wp-btn-gold:hover { background: #d9b43a; }
+        .wp-btn-ghost { background: transparent; color: #fff; border-color: rgba(255,255,255,.7); }
+        .wp-btn-ghost:hover { background: rgba(255,255,255,.12); }
+
+        .wp-h2 { margin: 0; font-family: 'Libre Baskerville', Georgia, serif; font-weight: 400; font-size: 36px; line-height: 1.18; color: var(--ink); }
+        .wp-on-ink { color: #fff; }
+
+        .wp-book { background: var(--ink); color: #fff; padding: 88px 0 80px; }
+        .wp-book-head { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px 48px; flex-wrap: wrap; margin-bottom: 32px; }
+        .wp-book-sub { margin: 0; max-width: 46ch; font-size: 16px; line-height: 1.6; color: rgba(255,255,255,.75); }
+        .wp-book-frame { aspect-ratio: 16 / 10; max-height: 82vh; width: 100%; background: #0d2422; border-radius: 4px; overflow: hidden; box-shadow: 0 40px 80px rgba(0,0,0,.35); }
+        .wp-book-frame iframe { display: block; width: 100%; height: 100%; border: 0; }
+        .wp-book-foot { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 24px; }
+        .wp-book-link { color: #fff; font-weight: 600; text-decoration: underline; text-decoration-color: var(--gold); text-underline-offset: 5px; text-decoration-thickness: 2px; }
+        .wp-book-link:hover { color: var(--sand); }
+
+        .wp-steps { padding: 96px 0 40px; }
+        .wp-step-list { list-style: none; margin: 40px 0 0; padding: 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 32px; }
+        .wp-step { border-top: 1px solid var(--sand); padding-top: 20px; }
+        .wp-step-n { display: block; font-family: 'Libre Baskerville', Georgia, serif; font-size: 40px; line-height: 1; color: var(--gold); }
+        .wp-step-h { margin: 16px 0 8px; font-family: Montserrat, sans-serif; font-size: 18px; font-weight: 700; line-height: 1.3; color: var(--ink); }
+        .wp-step-p { margin: 0; font-size: 15px; line-height: 1.6; color: var(--muted); }
+
+        .wp-terms { padding: 72px 0 88px; }
+        .wp-terms-grid { display: grid; grid-template-columns: 280px 1fr; gap: 48px; border-top: 1px solid var(--sand); padding-top: 56px; }
+        .wp-term-list { margin: 0; padding: 0 0 0 20px; columns: 2; column-gap: 40px; }
+        .wp-term-list li { break-inside: avoid; margin: 0 0 14px; font-size: 14px; line-height: 1.6; color: var(--muted); }
+        .wp-term-list li::marker { color: var(--gold); }
+
+        .wp-close { background: var(--sand); padding: 56px 0; }
+        .wp-close-in { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+        .wp-close-line { margin: 0; max-width: 34ch; font-family: 'Libre Baskerville', Georgia, serif; font-size: 24px; line-height: 1.35; color: var(--ink); }
+
+        @media (max-width: 900px) {
+          .wp-step-list { grid-template-columns: 1fr 1fr; }
+          .wp-terms-grid { grid-template-columns: 1fr; gap: 24px; }
+        }
+        @media (max-width: 600px) {
+          .wp-wrap, .wp-hero-in { padding-left: 16px; padding-right: 16px; }
+          .wp-hero { min-height: 560px; }
+          .wp-hero::after { background: linear-gradient(180deg, rgba(10,28,26,.2) 0%, rgba(10,28,26,.85) 70%); }
+          .wp-hero-in { padding-top: 48px; padding-bottom: 48px; }
+          .wp-title { font-size: 36px; }
+          .wp-lede { font-size: 16px; }
+          .wp-actions .wp-btn { flex: 1 1 100%; }
+          .wp-h2 { font-size: 28px; }
+          .wp-book { padding: 64px 0 56px; }
+          .wp-book-frame { aspect-ratio: 3 / 4; }
+          .wp-book-foot .wp-btn { width: 100%; }
+          .wp-steps { padding-top: 64px; }
+          .wp-step-list { grid-template-columns: 1fr; gap: 24px; }
+          .wp-term-list { columns: 1; }
+          .wp-close-line { font-size: 20px; }
+          .wp-close-in .wp-btn { width: 100%; }
+        }
       `}</style>
     </>
   );
